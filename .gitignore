@@ -1,0 +1,58 @@
+# This repository intentionally version-controls agent config directories.
+# Override broad global ignore rules from ~/.gitignore_global.
+!.claude/
+!.claude/**
+!.codex/
+!.codex/**
+!.gemini/
+!.gemini/**
+!.cursor/
+!.cursor/**
+!.config/
+!.config/opencode/
+!.config/opencode/**
+!.cursorrules
+!AGENTS.md
+!CLAUDE.md
+!GEMINI.md
+!CURSOR.md
+!OPENCODE.md
+
+# Claude Code runtime
+.claude/debug/
+.claude/cache/
+.claude/shell-snapshots/
+.claude/paste-cache/
+.claude/projects/
+.claude/history.jsonl
+.claude/stats-cache.json
+.claude/.credentials.json
+.claude/statsig/
+.claude/todos/
+.claude/telemetry/
+.claude/ide/
+.claude/downloads/
+.claude/plans/
+.claude/tasks/
+
+# Codex runtime
+.codex/tmp/
+.codex/sessions/
+.codex/models_cache.json
+.codex/auth.json
+.codex/cap_sid
+.codex/.personality_migration
+.codex/.sandbox/
+.codex/rules/
+.codex/skills/
+.codex/vendor_imports/
+
+# Multi-agent runtime
+.worktrees/
+coordination/locks/*.lock
+coordination/handoffs/*.md
+!coordination/handoffs/.gitkeep
+
+# Local scratchpad runtime
+.scratchpad/*
+!.scratchpad/README.md

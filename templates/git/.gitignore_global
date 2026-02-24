@@ -1,0 +1,24 @@
+# Local AI assistant configs/state: keep local only
+.claude/
+.codex/
+.gemini/
+.cursor/
+.cursorrules
+.opencode/
+.config/opencode/
+.claude.json
+
+# Local policy/memory files for AI tools
+AGENTS.md
+CLAUDE.md
+GEMINI.md
+CURSOR.md
+OPENCODE.md
+
+# Common secret material
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx

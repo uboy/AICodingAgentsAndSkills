@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Block local AI assistant config/state files from commits.
+blocked_pattern='(^|/)(\.claude(/|$)|\.codex(/|$)|\.gemini(/|$)|\.cursor(/|$)|\.cursorrules$|\.claude\.json$|AGENTS\.md$|CLAUDE\.md$|GEMINI\.md$|CURSOR\.md$)'
+
+staged_files=$(git diff --cached --name-only || true)
+if echo "$staged_files" | grep -Eiq "$blocked_pattern"; then
+  echo "[BLOCKED] Commit contains local AI config/policy files that must stay local." >&2
+  echo "$staged_files" | grep -Ei "$blocked_pattern" >&2 || true
+  exit 1
+fi
+
+# Scan only added lines to reduce false positives in comments/docs.
+added_lines="$(git diff --cached --no-color -U0 | grep -E '^\+[^+]' || true)"
+
+# High-confidence secret material.
+high_confidence_re='BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|sk-(live|test|proj)-[A-Za-z0-9_-]{10,}|ya29\.[A-Za-z0-9._-]+'
+if echo "$added_lines" | grep -Eiq "$high_confidence_re"; then
+  echo "[BLOCKED] Potential secret detected in staged changes." >&2
+  echo "Review staged diff and remove credentials/secrets before commit." >&2
+  exit 1
+fi
+
+# Generic secret assignment pattern with placeholder filtering.
+generic_secret_assign_re='(api[_-]?key|secret|password|passwd|token|access[_-]?token|refresh[_-]?token)[[:space:]]*[:=][[:space:]]*["'"'"']?[A-Za-z0-9_\/+=-]{16,}["'"'"']?'
+placeholder_re='(example|sample|dummy|test|placeholder|changeme|your[_-]?(api[_-]?key|token|secret|password))'
+if echo "$added_lines" | grep -Eio "$generic_secret_assign_re" | grep -Eiv "$placeholder_re" >/dev/null 2>&1; then
+  echo "[BLOCKED] Potential secret assignment detected in staged changes." >&2
+  echo "Review staged diff and remove credentials/secrets before commit." >&2
+  exit 1
+fi
+
+exit 0

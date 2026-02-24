@@ -1,0 +1,42 @@
+# source|target relative to repo root and user home
+# Missing source files are skipped.
+
+# Shared policy files
+AGENTS.md|AGENTS.md
+CLAUDE.md|CLAUDE.md
+GEMINI.md|GEMINI.md
+CURSOR.md|CURSOR.md
+OPENCODE.md|OPENCODE.md
+
+# Claude
+.claude/settings.json|.claude/settings.json
+.claude/settings.local.json|.claude/settings.local.json
+.claude/agents|.claude/agents
+
+# Codex
+.codex/AGENTS.md|.codex/AGENTS.md
+.codex/config.toml|.codex/config.toml
+skills|.codex/skills/local
+
+# Gemini (optional in this repo)
+.gemini/AGENTS.md|.gemini/AGENTS.md
+.gemini/GEMINI.md|.gemini/GEMINI.md
+.gemini/settings.json|.gemini/settings.json
+skills|.gemini/skills/local
+
+# Cursor (optional in this repo)
+.cursor/rules|.cursor/rules
+.cursorrules|.cursorrules
+skills|.cursor/skills/local
+
+# OpenCode
+.config/opencode/AGENTS.md|.config/opencode/AGENTS.md
+.config/opencode/opencode.json|.config/opencode/opencode.json
+skills|.config/opencode/skills/local
+
+# Claude shared skills (reference use)
+skills|.claude/skills/local
+
+# Git safety config
+templates/git/.gitignore_global|.gitignore_global
+templates/git/pre-commit|.githooks/pre-commit
