@@ -2,9 +2,10 @@ param(
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path,
     [ValidateSet("ask", "replace", "merge", "keep")]
     [string]$ConflictAction = "ask",
-    [string[]]$Category = @(), # New: filter by category tags in manifest
+    [string[]]$Category = @(),
     [switch]$DryRun,
-    [switch]$NoDeps,
+    [switch]$InstallDeps,   # opt-in: auto-install via winget (off by default)
+    [switch]$NoDeps,        # kept for compatibility; same as default
     [switch]$NonInteractive
 )
 
@@ -267,18 +268,17 @@ function Ensure-Dependency([string]$CommandName, [string]$WingetId) {
     if (Get-Command $CommandName -ErrorAction SilentlyContinue) {
         return $true
     }
-    if ($NoDeps) {
-        Write-Warn "$CommandName not found. Re-run without -NoDeps to auto-install."
+    if (-not $InstallDeps) {
+        Write-Warn "$CommandName not found — skipping (pass -InstallDeps to auto-install via winget)."
         return $false
     }
 
     if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-        Write-Warn "$CommandName missing and winget is unavailable. Install manually."
+        Write-Warn "$CommandName missing and winget is unavailable. Install $CommandName manually."
         return $false
     }
 
-    $installCmd = "winget install --id $WingetId -e --source winget --accept-package-agreements --accept-source-agreements"
-    Invoke-Exec { winget install --id $WingetId -e --source winget --accept-package-agreements --accept-source-agreements } "Install dependency: $installCmd"
+    Invoke-Exec { winget install --id $WingetId -e --source winget --accept-package-agreements --accept-source-agreements } "Install dependency via winget: $WingetId"
     return [bool](Get-Command $CommandName -ErrorAction SilentlyContinue)
 }
 

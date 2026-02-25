@@ -8,7 +8,8 @@ HOME_DIR="${HOME:-$(cd ~ && pwd -P)}"
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 
 DRY_RUN=0
-NO_DEPS=0
+NO_DEPS=1          # safe default: never run sudo to install packages
+INSTALL_DEPS=0     # opt-in with --install-deps
 NON_INTERACTIVE=0
 CONFLICT_ACTION="ask"
 declare -a CATEGORIES=()
@@ -22,7 +23,8 @@ Options:
   --conflict-action <mode>    ask|replace|merge|keep (default: ask)
   --category <name>           Filter by category (e.g., skills, agents)
   --dry-run                   Print actions without changing files
-  --no-deps                   Do not auto-install dependencies
+  --install-deps              Auto-install missing dependencies via sudo (off by default)
+  --no-deps                   Alias for default; never run sudo (kept for compatibility)
   --non-interactive           Never prompt; with ask-mode defaults to keep
   -h, --help                  Show help
 EOF
@@ -47,8 +49,14 @@ while [[ $# -gt 0 ]]; do
       DRY_RUN=1
       shift
       ;;
+    --install-deps)
+      NO_DEPS=0
+      INSTALL_DEPS=1
+      shift
+      ;;
     --no-deps)
       NO_DEPS=1
+      INSTALL_DEPS=0
       shift
       ;;
     --non-interactive)
@@ -285,15 +293,24 @@ ensure_dependency() {
   if command_exists "$cmd"; then
     return 0
   fi
-  if [[ $NO_DEPS -eq 1 ]]; then
-    log_warn "$cmd not found. Re-run without --no-deps to auto-install."
+  if [[ $INSTALL_DEPS -eq 0 ]]; then
+    log_warn "$cmd not found — skipping (pass --install-deps to auto-install via sudo)."
+    return 1
+  fi
+
+  # Verify sudo is available and usable before running privileged commands
+  if ! command_exists sudo; then
+    log_warn "$cmd not found and sudo is not available. Install $package_name manually."
+    return 1
+  fi
+  if ! sudo -n true 2>/dev/null; then
+    log_warn "$cmd not found but sudo requires a password. Install $package_name manually or run with sudo."
     return 1
   fi
 
   if command_exists brew; then
     run_cmd "Install dependency: brew install $package_name" brew install "$package_name"
   elif command_exists apt-get; then
-    run_cmd "Install dependency: apt-get install $package_name" sudo apt-get update
     run_cmd "Install dependency: apt-get install $package_name" sudo apt-get install -y "$package_name"
   elif command_exists dnf; then
     run_cmd "Install dependency: dnf install $package_name" sudo dnf install -y "$package_name"
