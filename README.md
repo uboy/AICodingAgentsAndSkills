@@ -58,12 +58,44 @@ pwsh -NoProfile -File .\scripts\validate-skills.ps1
 bash ./scripts/validate-skills.sh
 ```
 
+## Coordination and Rule Enforcement
+
+Validation for handoffs and state files (Rule 17, 21, 29):
+
+- Windows 11: `scripts/validate-coordination.ps1`
+- Linux/macOS: `scripts/validate-coordination.sh`
+
+Checks for:
+- Required sections (`## Summary`, `## Files Touched`, `## Verification`, `## Commit Message`)
+- Non-empty/placeholder verification and commit blocks.
+
+## Agent Memory and Knowledge Freshness
+
+Policy:
+- `AGENTS.md` Rule 20 (Knowledge Retention and Correction Loop)
+
+Storage:
+- `.agent-memory/index.jsonl`: compact index
+- `.agent-memory/entries/<tech>/`: detailed entries
+
+Freshness check:
+- Windows 11: `scripts/check-knowledge-freshness.ps1`
+- Linux/macOS: `scripts/check-knowledge-freshness.sh`
+
+## Codex Trust Management
+
+Utility to add the current project to the global Codex trusted list:
+
+- Windows 11: `scripts/fix-codex-trust.ps1`
+- Linux/macOS: `scripts/fix-codex-trust.sh`
+
 ## Permissions Policy Enforcement
 
 Machine-readable profile:
 
 - `policy/tool-permissions-profiles.json`
 - `policy/model-capability-profiles.md`
+- `policy/context-budget-policy.md`
 - Available profiles:
   - `default`: global baseline for all systems/models
   - `weak_model`: weak-model overlay (same safety floor, stricter execution structure)
@@ -152,6 +184,43 @@ pwsh -NoProfile -File .\scripts\security-review-gate.ps1
 bash ./scripts/security-review-gate.sh
 ```
 
+## Fast Integrity Checks
+
+Quick checks for project readiness and policy alignment:
+
+- cross-OS script parity (`*.ps1` <-> `*.sh`)
+- cross-system adapter coverage (Claude/Codex/Cursor/Gemini/OpenCode)
+- script/config syntax checks
+- required directory structure checks
+
+Run full fast check:
+
+Windows 11:
+
+```powershell
+pwsh -NoProfile -File .\scripts\run-integrity-fast.ps1
+```
+
+Linux/macOS:
+
+```bash
+bash ./scripts/run-integrity-fast.sh
+```
+
+Run parity-only check:
+
+Windows 11:
+
+```powershell
+pwsh -NoProfile -File .\scripts\validate-parity.ps1
+```
+
+Linux/macOS:
+
+```bash
+bash ./scripts/validate-parity.sh
+```
+
 ## Tool-Use Summary (Compact By Default)
 
 Policy:
@@ -196,6 +265,33 @@ Policy:
 Local transient area:
 
 - `.scratchpad/` (tracked: `.scratchpad/README.md`, runtime files ignored by git)
+
+## Large Codebase Context Toolkit
+
+Policy:
+
+- `policy/context-budget-policy.md`
+
+Tools:
+
+- Windows 11: `scripts/startup-ritual.ps1`, `scripts/build-repo-map.ps1`, `scripts/query-repo-map.ps1`
+- Linux/macOS: `scripts/startup-ritual.sh`, `scripts/build-repo-map.sh`, `scripts/query-repo-map.sh`
+
+Examples:
+
+```powershell
+pwsh -NoProfile -File .\scripts\startup-ritual.ps1 -Agent opencode
+pwsh -NoProfile -File .\scripts\build-repo-map.ps1
+pwsh -NoProfile -File .\scripts\query-repo-map.ps1 -Query ninja
+```
+
+```bash
+bash ./scripts/startup-ritual.sh --agent opencode
+bash ./scripts/build-repo-map.sh
+bash ./scripts/query-repo-map.sh --query ninja
+```
+
+Impacted systems: Claude, Codex, Cursor, Gemini, OpenCode.
 
 ## Installer Scripts
 
@@ -401,6 +497,20 @@ See `coordination/README.md`.
 - `coordination/state/*.md`: per-agent state
 - `coordination/handoffs/`: per-task outputs
 - `coordination/locks/`: resource locks
+
+### Interactive Task Generator
+
+Standardized way to create tasks for AI agents.
+
+Windows:
+```powershell
+pwsh -NoProfile -File .\scripts\generate-task.ps1
+```
+
+Linux / macOS:
+```bash
+bash ./scripts/generate-task.sh
+```
 
 ## Manifest-Driven Deploy
 

@@ -2,6 +2,7 @@ param(
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path,
     [ValidateSet("ask", "replace", "merge", "keep")]
     [string]$ConflictAction = "ask",
+    [string[]]$Category = @(), # New: filter by category tags in manifest
     [switch]$DryRun,
     [switch]$NoDeps,
     [switch]$NonInteractive
@@ -225,11 +226,23 @@ function Deploy-Entry([string]$SourceRel, [string]$TargetRel) {
 
 function Parse-Manifest([string]$Path) {
     $items = @()
+    $currentCategory = "default"
     foreach ($line in Get-Content -LiteralPath $Path) {
         $trimmed = $line.Trim()
-        if ([string]::IsNullOrWhiteSpace($trimmed) -or $trimmed.StartsWith("#")) {
+        if ([string]::IsNullOrWhiteSpace($trimmed)) { continue }
+        
+        if ($trimmed.StartsWith("#")) {
+            if ($trimmed -match "@category\s+(\S+)") {
+                $currentCategory = $Matches[1].Trim()
+            }
             continue
         }
+
+        # Filter by category if requested
+        if ($Category.Count -gt 0 -and $currentCategory -notin $Category) {
+            continue
+        }
+
         $parts = $trimmed.Split("|", 2)
         if ($parts.Count -ne 2) {
             Write-Warn "Invalid manifest line: $line"
@@ -238,6 +251,7 @@ function Parse-Manifest([string]$Path) {
         $items += [PSCustomObject]@{
             Source = $parts[0].Trim()
             Target = $parts[1].Trim()
+            Category = $currentCategory
         }
     }
     return $items
@@ -329,8 +343,52 @@ foreach ($entry in $entries) {
     Deploy-Entry -SourceRel $entry.Source -TargetRel $entry.Target
 }
 
+function Ensure-CommitPolicy {
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) { return }
+    $marker = Join-Path $RepoRoot ".ai-agent-config-repo"
+    if (Test-Path -LiteralPath $marker -PathType Leaf) {
+        Invoke-Exec { git config ai-agent.allow-config-commits true } "Marking repo as canonical AI config repo (allows AI file commits)"
+    }
+}
+
+function Ensure-CodexLocalTrust {
+    # Set trust_repository = true in the local config if not present
+    $localConfig = Join-Path $RepoRoot ".codex/config.toml"
+    if (Test-Path -LiteralPath $localConfig -PathType Leaf) {
+        $content = Get-Content -LiteralPath $localConfig -Raw
+        if ($content -notmatch "trust_repository\s*=\s*true") {
+            Invoke-Exec { Add-Content $localConfig "`ntrust_repository = true" } "Trusting repository in local Codex config"
+        }
+    }
+}
+
+function Ensure-CodexGlobalTrust {
+    $globalConfig = Join-Path $HomeDir ".codex/config.toml"
+    # Codex canonicalizes paths with \\?\ prefix on Windows
+    $rawPath = (Resolve-Path -LiteralPath $RepoRoot).Path
+    if (-not $rawPath.StartsWith("\\?\")) {
+        $rawPath = "\\?\$rawPath"
+    }
+    $tomlHeader = "[projects.'$rawPath']"
+    $trustLine = 'trust_level = "trusted"'
+
+    if (-not (Test-Path -LiteralPath $globalConfig)) {
+        Ensure-ParentDir $globalConfig
+        Invoke-Exec { Set-Content $globalConfig "$tomlHeader`n$trustLine`n" } "Initialize Codex global trust"
+        return
+    }
+
+    $content = Get-Content -LiteralPath $globalConfig -Raw
+    if ($content -notmatch [regex]::Escape($rawPath)) {
+        Invoke-Exec { Add-Content $globalConfig "`n$tomlHeader`n$trustLine`n" } "Add project to Codex global projects trust"
+    }
+}
+
 if ($gitOk) {
     Ensure-GitConfig -HomePath $HomeDir
+    Ensure-CommitPolicy
+    Ensure-CodexLocalTrust
+    Ensure-CodexGlobalTrust
 }
 
 Write-Step "Done."

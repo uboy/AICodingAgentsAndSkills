@@ -1,0 +1,19 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "AGENTS.md",
+    "Always use clear Markdown formatting.",
+    "Separate thoughts from tool calls using distinct blocks.",
+    "Do not include internal function metadata or nonsensical tokens in the final output.",
+    "Ensure the 'About to...' explanation (Rule 19) is on a separate line before any tool execution.",
+    "Custom agents are available in the '.opencode/agents/' directory. You can use their names as 'subagent_type' in the Task tool.",
+    "Registered Agents: [agent-architect, lead-dev-planner, implementation-developer, code-review-qa, docs-writer, debug-detective, devops-engineer, agent-lawyer]."
+  ],
+  "permission": {
+    "bash": "ask",
+    "read": "allow",
+    "edit": "allow",
+    "write": "allow",
+    "webfetch": "ask"
+  }
+}

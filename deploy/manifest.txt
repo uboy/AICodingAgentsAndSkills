@@ -1,42 +1,62 @@
-# source|target relative to repo root and user home
-# Missing source files are skipped.
-
-# Shared policy files
+# @category policy
 AGENTS.md|AGENTS.md
 CLAUDE.md|CLAUDE.md
 GEMINI.md|GEMINI.md
 CURSOR.md|CURSOR.md
 OPENCODE.md|OPENCODE.md
+.ai-agent-config-repo|.ai-agent-config-repo
+policy|policy
 
-# Claude
+# @category configs
 .claude/settings.json|.claude/settings.json
 .claude/settings.local.json|.claude/settings.local.json
-.claude/agents|.claude/agents
-
-# Codex
-.codex/AGENTS.md|.codex/AGENTS.md
 .codex/config.toml|.codex/config.toml
-skills|.codex/skills/local
+.gemini/settings.json|.gemini/settings.json
+.cursorrules|.cursorrules
+opencode.json|.config/opencode/opencode.json
+opencode.json|opencode.json
 
-# Gemini (optional in this repo)
+# @category agents
+.claude/agents|.claude/agents
+.codex/AGENTS.md|.codex/AGENTS.md
+.claude/agents|.codex/agents
 .gemini/AGENTS.md|.gemini/AGENTS.md
 .gemini/GEMINI.md|.gemini/GEMINI.md
-.gemini/settings.json|.gemini/settings.json
-skills|.gemini/skills/local
-
-# Cursor (optional in this repo)
+gemini-extension|.gemini/extensions/ai-coding-agents
+.claude/agents|.gemini/extensions/ai-coding-agents/agents
 .cursor/rules|.cursor/rules
-.cursorrules|.cursorrules
-skills|.cursor/skills/local
+.opencode/AGENTS.md|.config/opencode/AGENTS.md
+.claude/agents|.config/opencode/agents
+.opencode/AGENTS.md|.opencode/AGENTS.md
+.claude/agents|.opencode/agents
 
-# OpenCode
-.config/opencode/AGENTS.md|.config/opencode/AGENTS.md
-.config/opencode/opencode.json|.config/opencode/opencode.json
-skills|.config/opencode/skills/local
-
-# Claude shared skills (reference use)
+# @category skills
+skills|.gemini/extensions/ai-coding-agents/skills
 skills|.claude/skills/local
+skills|.codex/skills/local
 
-# Git safety config
+# @category coordination
+coordination/PLAN-TASK-PROTOCOL.md|coordination/PLAN-TASK-PROTOCOL.md
+coordination/README.md|coordination/README.md
+coordination/tool-usage.sample.jsonl|coordination/tool-usage.sample.jsonl
+coordination/templates|coordination/templates
+
+# @category scripts
+scripts/generate-task.ps1|scripts/generate-task.ps1
+scripts/generate-task.sh|scripts/generate-task.sh
+scripts/validate-coordination.ps1|scripts/validate-coordination.ps1
+scripts/validate-coordination.sh|scripts/validate-coordination.sh
+scripts/security-review-gate.ps1|scripts/security-review-gate.ps1
+scripts/security-review-gate.sh|scripts/security-review-gate.sh
+scripts/run-integrity-fast.ps1|scripts/run-integrity-fast.ps1
+scripts/run-integrity-fast.sh|scripts/run-integrity-fast.sh
+scripts/fix-codex-trust.ps1|scripts/fix-codex-trust.ps1
+scripts/fix-codex-trust.sh|scripts/fix-codex-trust.sh
+scripts/check-command-safety.ps1|scripts/check-command-safety.ps1
+scripts/check-command-safety.sh|scripts/check-command-safety.sh
+
+# @category git
 templates/git/.gitignore_global|.gitignore_global
 templates/git/pre-commit|.githooks/pre-commit
+commands|.claude/commands
+references|references

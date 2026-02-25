@@ -1,34 +1,47 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Block local AI assistant config/state files from commits.
-blocked_pattern='(^|/)(\.claude(/|$)|\.codex(/|$)|\.gemini(/|$)|\.cursor(/|$)|\.cursorrules$|\.claude\.json$|AGENTS\.md$|CLAUDE\.md$|GEMINI\.md$|CURSOR\.md$)'
-
-staged_files=$(git diff --cached --name-only || true)
-if echo "$staged_files" | grep -Eiq "$blocked_pattern"; then
-  echo "[BLOCKED] Commit contains local AI config/policy files that must stay local." >&2
-  echo "$staged_files" | grep -Ei "$blocked_pattern" >&2 || true
-  exit 1
+# Bypass check if explicit skip is requested.
+if [[ "${SKIP_SECURITY_GATE:-}" == "1" ]]; then
+  echo "[INFO] Security gate skipped via SKIP_SECURITY_GATE=1"
+  exit 0
 fi
 
-# Scan only added lines to reduce false positives in comments/docs.
-added_lines="$(git diff --cached --no-color -U0 | grep -E '^\+[^+]' || true)"
+# Bypass check if this is a dedicated AI configuration repository.
+if [[ "$(git config --get ai-agent.allow-config-commits || echo "false")" == "true" ]] || [[ -f ".ai-agent-config-repo" ]]; then
+  goto_security_gate=1
+else
+  blocked_pattern='(^|/)(\.(claude|codex|gemini|cursor)(/|$))|^\.cursorrules$|^\.claude\.json$|^AGENTS\.md$|^CLAUDE\.md$|^GEMINI\.md$|^CURSOR\.md$|^OPENCODE\.md$'
 
-# High-confidence secret material.
-high_confidence_re='BEGIN (RSA|OPENSSH|EC|DSA) PRIVATE KEY|AKIA[0-9A-Z]{16}|ASIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|sk-(live|test|proj)-[A-Za-z0-9_-]{10,}|ya29\.[A-Za-z0-9._-]+'
-if echo "$added_lines" | grep -Eiq "$high_confidence_re"; then
-  echo "[BLOCKED] Potential secret detected in staged changes." >&2
-  echo "Review staged diff and remove credentials/secrets before commit." >&2
-  exit 1
+  staged_files=$(git diff --cached --name-only || true)
+  if echo "$staged_files" | grep -Eiq "$blocked_pattern"; then
+    flagged_files=$(echo "$staged_files" | grep -Ei "$blocked_pattern" || true)
+    if [[ -n "$flagged_files" ]]; then
+      echo "[BLOCKED] Commit contains local AI config/policy files that must stay local." >&2
+      echo "Problematic files:" >&2
+      echo "$flagged_files" >&2
+      echo -e "\nTo bypass this check:" >&2
+      echo "1. For this repo only: run 'git config ai-agent.allow-config-commits true'" >&2
+      echo "2. One-time skip: run 'export SKIP_SECURITY_GATE=1 && git commit ...'" >&2
+      echo "3. Git native skip: run 'git commit --no-verify ...'" >&2
+      exit 1
+    fi
+  fi
 fi
 
-# Generic secret assignment pattern with placeholder filtering.
-generic_secret_assign_re='(api[_-]?key|secret|password|passwd|token|access[_-]?token|refresh[_-]?token)[[:space:]]*[:=][[:space:]]*["'"'"']?[A-Za-z0-9_\/+=-]{16,}["'"'"']?'
-placeholder_re='(example|sample|dummy|test|placeholder|changeme|your[_-]?(api[_-]?key|token|secret|password))'
-if echo "$added_lines" | grep -Eio "$generic_secret_assign_re" | grep -Eiv "$placeholder_re" >/dev/null 2>&1; then
-  echo "[BLOCKED] Potential secret assignment detected in staged changes." >&2
-  echo "Review staged diff and remove credentials/secrets before commit." >&2
-  exit 1
+# Run mandatory security review gate before commit.
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+if [[ -f "$REPO_ROOT/scripts/security-review-gate.sh" ]]; then
+  gate_output="$(bash "$REPO_ROOT/scripts/security-review-gate.sh" 2>&1)" || {
+    echo "[BLOCKED] Security review gate failed." >&2
+    echo "$gate_output" >&2
+    echo -e "\nTo bypass this gate, run:" >&2
+    echo "  export SKIP_SECURITY_GATE=1 && git commit -m '...'" >&2
+    echo "  (On Windows/CMD: set SKIP_SECURITY_GATE=1 && git commit -m '...')" >&2
+    echo "  (On Windows/PS: \$env:SKIP_SECURITY_GATE=1; git commit -m '...')" >&2
+    echo "Or use 'git commit --no-verify' to skip all hooks." >&2
+    exit 1
+  }
 fi
 
 exit 0

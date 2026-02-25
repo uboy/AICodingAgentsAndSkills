@@ -1,0 +1,19 @@
+---
+description: Global policy for Cursor in this repository
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Cursor Global Policy Adapter
+
+Read and follow canonical files:
+
+- `AGENTS.md`
+
+Cursor-specific adapter files:
+
+- `CURSOR.md`
+- `.cursorrules`
+
+These adapter files must not diverge from canonical policy.

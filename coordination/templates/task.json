@@ -1,0 +1,28 @@
+{
+  "id": "T-000",
+  "title": "Task title",
+  "owner": "codex",
+  "status": "todo",
+  "priority": "medium",
+  "checklist": [
+    {
+      "id": "C-1",
+      "text": "Implement requested change",
+      "status": "todo"
+    },
+    {
+      "id": "C-2",
+      "text": "Run compile/run/tests verification",
+      "status": "todo"
+    },
+    {
+      "id": "C-3",
+      "text": "Update docs and run security gate",
+      "status": "todo"
+    }
+  ],
+  "depends_on": [],
+  "inputs": [],
+  "outputs": [],
+  "updated_at": "2026-01-01T00:00:00Z"
+}

@@ -11,6 +11,7 @@ DRY_RUN=0
 NO_DEPS=0
 NON_INTERACTIVE=0
 CONFLICT_ACTION="ask"
+declare -a CATEGORIES=()
 
 usage() {
   cat <<EOF
@@ -19,6 +20,7 @@ Usage: $(basename "$0") [options]
 Options:
   --repo-root <path>          Override repository root
   --conflict-action <mode>    ask|replace|merge|keep (default: ask)
+  --category <name>           Filter by category (e.g., skills, agents)
   --dry-run                   Print actions without changing files
   --no-deps                   Do not auto-install dependencies
   --non-interactive           Never prompt; with ask-mode defaults to keep
@@ -35,6 +37,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --conflict-action)
       CONFLICT_ACTION="$2"
+      shift 2
+      ;;
+    --category)
+      CATEGORIES+=("$2")
       shift 2
       ;;
     --dry-run)
@@ -334,6 +340,60 @@ ensure_git_config() {
   run_cmd "Set git core.hooksPath" git config --global core.hooksPath "$HOME_DIR/.githooks"
 }
 
+ensure_commit_policy() {
+  if ! command_exists git; then
+    return
+  fi
+  if [[ -f "$REPO_ROOT/.ai-agent-config-repo" ]]; then
+    run_cmd "Marking repo as canonical AI config repo" git config ai-agent.allow-config-commits true
+  fi
+}
+
+ensure_codex_local_trust() {
+  local local_config="$REPO_ROOT/.codex/config.toml"
+  if [[ -f "$local_config" ]]; then
+    if ! grep -q "trust_repository[[:space:]]*=[[:space:]]*true" "$local_config"; then
+      run_cmd "Trusting repository in local Codex config" echo "trust_repository = true" >> "$local_config"
+    fi
+  fi
+}
+
+ensure_codex_global_trust() {
+  local global_config="$HOME_DIR/.codex/config.toml"
+  # Convert POSIX path to Windows extended-length path (\\?\C:\...)
+  local win_path
+  if command_exists cygpath; then
+    win_path="$(cygpath -w "$REPO_ROOT")"
+  else
+    win_path="$REPO_ROOT"
+  fi
+  # Prepend \\?\ prefix if this is a Windows absolute path
+  if [[ "$win_path" =~ ^[A-Za-z]:\\ ]]; then
+    win_path="\\\\?\\$win_path"
+  fi
+
+  local toml_header="[projects.'$win_path']"
+  local trust_line='trust_level = "trusted"'
+
+  if [[ ! -f "$global_config" ]]; then
+    run_cmd "Initialize Codex global trust" mkdir -p "$(dirname "$global_config")"
+    if [[ $DRY_RUN -eq 0 ]]; then
+      printf '%s\n%s\n' "$toml_header" "$trust_line" > "$global_config"
+    else
+      echo "[DRY] Write $global_config with trust for $win_path"
+    fi
+    return
+  fi
+
+  if ! grep -Fq "$win_path" "$global_config"; then
+    if [[ $DRY_RUN -eq 0 ]]; then
+      printf '\n%s\n%s\n' "$toml_header" "$trust_line" >> "$global_config"
+    else
+      echo "[DRY] Append trust for $win_path to $global_config"
+    fi
+  fi
+}
+
 invoke_auto_backup() {
   local backup_script="$SCRIPT_DIR/backup-user-config.sh"
   if [[ ! -f "$backup_script" ]]; then
@@ -361,12 +421,32 @@ ensure_dependency git git || true
 ensure_dependency gitleaks gitleaks || true
 
 entry_count=0
+CURRENT_CATEGORY="default"
 while IFS='|' read -r source_rel target_rel; do
   line="${source_rel}${target_rel}"
   if [[ -z "${line// }" ]]; then
     continue
   fi
-  [[ "${source_rel#"${source_rel%%[![:space:]]*}"}" == \#* ]] && continue
+  
+  if [[ "${source_rel#"${source_rel%%[![:space:]]*}"}" == \#* ]]; then
+    if [[ "$source_rel" =~ @category[[:space:]]+([^[:space:]]+) ]]; then
+      CURRENT_CATEGORY="${BASH_REMATCH[1]}"
+    fi
+    continue
+  fi
+
+  # Filter by category if requested
+  if [[ ${#CATEGORIES[@]} -gt 0 ]]; then
+    match=0
+    for cat in "${CATEGORIES[@]}"; do
+      if [[ "$cat" == "$CURRENT_CATEGORY" ]]; then
+        match=1
+        break
+      fi
+    done
+    [[ $match -eq 0 ]] && continue
+  fi
+
   source_rel="$(echo "$source_rel" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
   target_rel="$(echo "$target_rel" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
   [[ -z "$source_rel" || -z "$target_rel" ]] && continue
@@ -376,6 +456,9 @@ done < "$MANIFEST_PATH"
 
 log_step "Manifest entries: $entry_count"
 ensure_git_config
+ensure_commit_policy
+ensure_codex_local_trust
+ensure_codex_global_trust
 
 if [[ -f "$HOME_DIR/.githooks/pre-commit" && $DRY_RUN -eq 0 ]]; then
   chmod +x "$HOME_DIR/.githooks/pre-commit" || true

@@ -29,6 +29,24 @@ Each line is one JSON object:
 Allowed `status`: `todo`, `in_progress`, `blocked`, `done`.
 Checklist item status: `todo`, `in_progress`, `blocked`, `done`.
 
+### Interactive Task Generator
+
+To add a new task to the queue, use:
+
+**Windows:**
+```powershell
+pwsh -NoProfile -File .\scripts\generate-task.ps1
+```
+
+**Linux / macOS:**
+```bash
+bash ./scripts/generate-task.sh
+```
+
+The generator supports two modes:
+1. **AI Mode (Recommended)**: You provide a raw idea, and the agent uses the `task-specifier` skill to research relevant files and propose a technical plan.
+2. **Manual Mode**: Standard interactive prompts for all fields.
+
 ## Locking Rule
 
 Before editing a shared file or directory, create a lock file:
