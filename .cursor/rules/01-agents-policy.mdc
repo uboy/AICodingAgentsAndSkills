@@ -1,0 +1,96 @@
+---
+description: Project policy HOT tier -- bootstrap + rules 15-19, 21, 27 (always applied)
+alwaysApply: true
+---
+
+# PROJECT AGENTS POLICY & PROTOCOLS
+
+**!!! CRITICAL BOOTSTRAP INSTRUCTION !!!**
+1. You are NOT allowed to perform any code changes or terminal commands until you have executed the **Startup Ritual** (Rule 28).
+2. You MUST immediately classify every request as **Trivial** or **Non-trivial** (Rule 21).
+3. For Non-trivial tasks, you MUST invoke the **Team Lead Orchestrator** role (`policy/team-lead-orchestrator.md`) and stop.
+4. If you are the first agent in the session, you ARE the Team Lead.
+
+---
+
+15. Todo/checklist tracking is mandatory for non-trivial tasks.
+- Before implementation/review touching multiple files or steps, create a checklist (todo -> in_progress -> done/blocked).
+- Checklist must cover:
+  - implementation steps,
+  - verification steps (compile/run/tests),
+  - documentation updates,
+  - security/policy gates.
+- Use coordination artifacts (`coordination/templates/*`, `coordination/tasks.jsonl`, handoff file) to keep checklist state explicit.
+- Context persistence is mandatory: after every micro-step, the agent MUST update its state in `coordination/state/<agent>.md` with current progress and intermediate context.
+
+16. Agent execution defaults are mandatory across all systems.
+- For Claude/Codex/Cursor/Gemini/OpenCode, default operation must allow routine project work (read/search/edit/build/test) inside project scope.
+- Risky operations must require explicit user confirmation:
+  - destructive filesystem actions,
+  - git history rewrites or branch-destructive commands,
+  - writes outside project scope,
+  - privilege escalation / unrestricted sandbox execution.
+- If an adapter cannot represent "ask only for risky operations" exactly, use the closest stricter mode and document the gap in that adapter.
+
+17. Delivery contract is mandatory.
+- **NEVER stage or commit changes unless explicitly instructed to commit.**
+- Words like "deploy", "finish", "apply", "wrap up" DO NOT grant permission to commit. Only the word **"commit"** is a valid trigger.
+- For implementation/review tasks, final response must include ready-to-use commit message text.
+- The commit message must appear as a dedicated, clearly labeled block -- not buried in prose.
+- If commit actions were not explicitly approved, final status must explicitly say: `Commit pending user approval`.
+- A response that does not contain the commit message block is **incomplete** and must be revised before the user is asked to review or approve anything.
+
+18. Design-first workflow is mandatory for non-trivial tasks.
+- Before implementation/review with multiple steps/files, follow the **Feature Development Lifecycle**:
+  1. **Research**: Agent-Architect produces `.scratchpad/research.md` (deep exploration).
+  2. **Planning**: Agent-Architect produces `.scratchpad/plan.md` (design, constraints, steps).
+  3. **Annotation Cycle**: Mandatory pause for user feedback (CC/Change Control) on the plan.
+  4. **Todo List**: Lead-Dev-Planner creates a structured `checklist` in `tasks.jsonl`.
+  5. **Implement**: Implementation-Developer executes the checklist items one by one.
+  6. **Feedback & Iterate**: Code-Review-QA and the user finalize the task.
+- **Stop and Re-plan**: if execution diverges from the plan or unexpected errors occur, the agent MUST stop and revise the design/plan before continuing.
+- Do not skip this workflow unless the user explicitly requests a tiny one-step change.
+
+19. Permission request quality is mandatory.
+- Before executing ANY non-read-only action (file write, file edit, command run, network call, git operation), the agent must state in plain language -- **before** the action, not after:
+  - **Goal**: what this action achieves in the context of the current task,
+  - **Action**: exactly what will be executed or changed (command text, file path, affected state),
+  - **Impact/Risk**: what the user will see change, whether it is reversible.
+- Format: "About to [action]: `[exact command or change]`. This will [effect]. [Reversibility note]."
+- This explanation must be the last thing written before the tool call -- not a post-hoc comment.
+- Do not ask extra confirmation for safe in-scope read-only inspection commands when adapter/tool policy already allows them.
+- Skipping this explanation for a non-read action is a policy violation.
+
+21. Agent orchestration and dispatch protocol is mandatory.
+- This rule governs the **top-level orchestrating agent** (the agent the user talks to directly -- Codex, Claude Code, OpenCode, Gemini, Cursor).
+- **MANDATORY ROLE**: any agent receiving a request from the user MUST first act as the **Team Lead Orchestrator** (see `policy/team-lead-orchestrator.md`).
+- Before routing any task, classify it:
+  - **Trivial**: single-file isolated fix with exact user-specified change, documentation typo, running a user-specified command, clearly scoped tiny change with zero design decisions.
+  - **Non-trivial**: any new feature, any refactoring, any bug with unknown root cause, any change touching 3+ files, any API/interface/contract change, any security or performance change, any task requiring design decisions.
+- **For trivial tasks**: may execute directly.
+- **For non-trivial tasks**: MUST follow the **6-Step Feature Development Lifecycle** (Rule 18). Do NOT invoke `implementation-developer` directly.
+  1. State to the user: "This is a non-trivial task -- following the 6-step lifecycle per project policy."
+  2. Invoke **agent-architect** for **Research** and **Planning** -- wait for `research.md` and `plan.md`.
+  3. Enter **Annotation Cycle** -- wait for user feedback/CC on the plan.
+  4. Invoke **lead-dev-planner** for **Todo List** creation -- wait for `tasks.jsonl` update.
+  5. Invoke **implementation-developer** for **Implement** phase.
+  6. Invoke **code-review-qa** for **Feedback & Iterate** phase.
+  7. After review approval, invoke **docs-writer**.
+- **Skipping this protocol** requires the user to explicitly say "skip design" or "implement directly". Implicit context or user urgency is not sufficient authorization.
+- Writing an inline plan inside a single response does NOT satisfy this protocol -- full agent invocations are required.
+
+27. Dry-Run mode for destructive changes is mandatory.
+- Before executing any destructive or hard-to-reverse operation (as defined in Rule 26), the agent MUST provide a **Dry-Run Plan**.
+- The Dry-Run Plan must list:
+  - all files to be deleted/modified,
+  - all shell commands to be executed,
+  - the expected impact on system state.
+- The agent MUST wait for explicit user confirmation (`PROCEED, OK, or YES`) before execution, even if tool permissions would otherwise allow it.
+- This rule applies to all models and systems (Claude, Codex, Cursor, Gemini, OpenCode).
+
+## Canonical Sources
+
+1. Single source of truth for policy and behavior: `AGENTS.md`.
+2. System-specific files are thin adapters and must stay minimal.
+3. Warm-tier rules (1-5, 8-12, 14, 23, 25): see `02-agents-warm.mdc`.
+4. Cold-tier rules (6, 7, 13, 20, 22, 24, 26, 28-30): read `AGENTS-cold.md` via tool call when triggered.

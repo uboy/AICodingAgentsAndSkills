@@ -1,19 +1,12 @@
 ---
-description: Global policy for Cursor in this repository
+description: Global policy adapter — full rules are in 01-agents-policy.mdc (alwaysApply)
 globs:
   - "**/*"
-alwaysApply: true
+alwaysApply: false
 ---
 
-# Cursor Global Policy Adapter
+# Cursor Global Policy
 
-Read and follow canonical files:
+Full policy is in `01-agents-policy.mdc` (auto-applied).
 
-- `AGENTS.md`
-
-Cursor-specific adapter files:
-
-- `CURSOR.md`
-- `.cursorrules`
-
-These adapter files must not diverge from canonical policy.
+Canonical source: `AGENTS.md`

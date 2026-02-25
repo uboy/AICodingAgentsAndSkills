@@ -400,7 +400,7 @@ ensure_codex_global_trust() {
   if [[ ! -f "$global_config" ]]; then
     run_cmd "Initialize Codex global trust" mkdir -p "$(dirname "$global_config")"
     if [[ $DRY_RUN -eq 0 ]]; then
-      printf '%s\n%s\n' "$toml_header" "$trust_line" > "$global_config"
+      printf 'approval_policy = "never"\nsandbox_mode = "workspace-write"\n\n%s\n%s\n' "$toml_header" "$trust_line" > "$global_config"
     else
       echo "[DRY] Write $global_config with trust for $win_path"
     fi

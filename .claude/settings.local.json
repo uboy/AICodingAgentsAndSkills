@@ -27,7 +27,13 @@
       "Bash(head:*)",
       "Bash(cd /c/Users/devl/proj/AICodingAgentsAndSkills && bash scripts/run-integrity-fast.sh 2>&1)",
       "Bash(tail:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:geminicli.com)",
+      "WebFetch(domain:google-gemini.github.io)",
+      "Bash(grep:*)",
+      "Bash(powershell.exe:*)"
     ]
   }
 }

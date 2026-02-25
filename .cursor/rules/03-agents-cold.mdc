@@ -1,0 +1,89 @@
+---
+description: Project policy COLD tier -- rules 6, 7, 13, 20, 22, 24, 26, 28-30. Load when: adding skills, changing permissions, adding dependencies, fixing critical bugs, planning rollbacks, starting a session, or updating agent memory.
+alwaysApply: false
+---
+
+6. Skills governance is mandatory.
+- Any new/updated skill under `skills/` must comply with:
+  - `skills/QUALITY-STANDARD.md`
+  - `skills/_shared/TEXT_GUARDRAILS.md` (for text/transcript processing skills)
+- Skill changes must pass:
+  - `scripts/validate-skills.ps1` (Windows)
+  - `scripts/validate-skills.sh` (Linux/macOS)
+
+7. Permissions governance is mandatory.
+- Default tool behavior must follow `policy/tool-permissions-matrix.md`.
+- If a system-specific adapter cannot express a rule exactly, use the closest stricter behavior and document the gap.
+
+13. Legal audits are explicit opt-in only.
+- Run `agent-lawyer` checks only when user explicitly requests legal/license/compliance review.
+- Do not proactively launch legal audits based only on dependency/code changes.
+- Do not create or update legal risk registries unless user explicitly asked for lawyer review.
+
+20. Reusable knowledge retention and revalidation are mandatory.
+- **Correction Loop**: After ANY correction or bug report from the user, the agent MUST update `.agent-memory/` with the pattern and a rule to prevent repeating the mistake **BEFORE** ending the turn.
+- Persist reusable corrections (deprecations, API changes, recurring failure patterns, policy mismatches) in `.agent-memory/` with technology/skill tags.
+- Use `.agent-memory/index.jsonl` as compact index and `.agent-memory/entries/<technology>/` for detailed notes.
+- Every reusable entry must include:
+  - `id`, `technology`, `skills`, `applies_to_systems`,
+  - `summary`, `source_links`,
+  - `recorded_on`, `last_verified_on`, `verify_after_days`, `status`.
+- Reuse must be scoped: retrieve only entries relevant to current task technology/skill; do not load entire memory by default.
+- Revalidation triggers:
+  - event-driven: user reports outdated behavior, runtime warning/error indicates drift, or agent detects conflicting behavior;
+  - time-driven: run freshness checks via `scripts/check-knowledge-freshness.ps1` (Windows) and `scripts/check-knowledge-freshness.sh` (Linux/macOS).
+- Stale/conflicting entries must be re-verified against authoritative sources before reuse; then update or retire the entry.
+- Cross-system behavior must remain aligned for Claude/Codex/Cursor/Gemini/OpenCode.
+
+22. Critical bug fix testing is mandatory.
+- A bug is classified as **critical** when it causes any of: data loss, security vulnerability, incorrect output in production, crash, or regression of a previously working feature.
+- When fixing a critical bug, the implementing agent MUST:
+  - write at least one automated regression test that **reproduces the failure** before the fix and **passes** after the fix,
+  - include the test in the same task/diff as the fix -- not as a separate follow-up,
+  - report: `Regression test added: <test name/file>: <what it verifies>`.
+- If the project has no test framework, the agent must:
+  - flag this as a **blocker**,
+  - propose a minimal test setup adequate for the fix,
+  - obtain user approval before proceeding.
+- `code-review-qa` must verify the regression test exists and must **block completion** if the test is absent for a critical bug fix.
+- `debug-detective` must include a **"Required Regression Tests"** section in every Diagnostic Report for critical bugs, listing specific test scenarios (inputs, expected outputs, edge cases) that the fix must cover.
+
+24. Dependency security scanning is mandatory when dependencies change.
+- When adding, updating, or removing dependencies (npm, pip, cargo, go, maven, gradle, nuget, etc.), the agent must run the applicable security scan before declaring completion:
+  - JavaScript/TypeScript: `npm audit` or `pnpm audit`
+  - Python: `pip-audit` or `safety check`
+  - Rust: `cargo audit`
+  - Go: `govulncheck ./...`
+  - Java/Kotlin: `./gradlew dependencyCheckAnalyze` or `mvn dependency-check:check`
+- If the scan tool is not installed, agent must: flag this as a warning, list the deps added, and recommend the user run the scan before deploying.
+- **Critical and High severity findings block completion** -- must be resolved or explicitly accepted by the user with documented rationale.
+- `code-review-qa` must verify that a dependency scan was run and reported when dependencies changed.
+
+26. Rollback and recovery planning is mandatory for destructive changes.
+- Before any destructive or hard-to-reverse operation (schema migration, file deletion, data transform, dependency major upgrade, config replace, git history rewrite), the agent must document the exact rollback steps.
+- The Completion Report must include a **Rollback** section stating: rollback command(s), expected time to recover, and data loss risk.
+- If rollback is not possible (e.g., irreversible data transform), this must be explicitly stated and user must confirm before proceeding.
+- `devops-engineer` and `implementation-developer` must include rollback documentation in all deployment and migration work.
+
+28. Context Resumption, Startup Ritual, and Continuous Persistence are mandatory.
+- Agents MUST NOT assume they start with a clean slate.
+- **Startup Ritual**: at the beginning of every session, the agent MUST:
+  1. Read `coordination/tasks.jsonl` to check for `in_progress` tasks assigned to it.
+  2. Read its own state file `coordination/state/<agent>.md`.
+  3. If a task is in progress, synchronize the current state and resume from the last saved checkpoint without asking the user for the history.
+- **Continuous Persistence**: The agent MUST update its state in `coordination/state/<agent>.md` **after every significant finding or tool call**, not just at the end of a micro-step.
+- For large context (code snippets, complex logs, build analysis), use files in `.scratchpad/` and store their paths in the state file.
+- **Verification**: If an agent fails to save intermediate findings in `.scratchpad/` during a non-trivial task, the task is considered failed.
+
+29. Automated Verification and Testing Lifecycle are mandatory.
+- Every code change (feature or fix) MUST include automated verification logic.
+- **For scripts/tools**: include a test script (e.g., `tests/*.test.ps1`, `tests/*.test.sh`) or a self-verifying example.
+- **For skills**: update existing eval cases in `evals/skills/cases/` or add new ones.
+- **Execution**: tests MUST be executed before every handoff and commit.
+- **Maintenance**: when existing code is modified, the agent MUST identify and update all related existing tests to maintain project integrity.
+- **Reporting**: every handoff MUST include a `Verification` section listing executed commands and their results (pass/fail).
+
+30. Autonomous Operation and Engineering Excellence are mandatory.
+- **Autonomous Bug Fixing**: when a bug or failing CI test is reported, the agent MUST take initiative to find the root cause and fix it without constant hand-holding.
+- **Simplicity and Minimal Impact**: every change must be as simple as possible, touching only the necessary code to minimize regression risk.
+- **Balanced Elegance**: for non-trivial tasks, the agent MUST pause and evaluate if there is a more elegant solution than the first hacky fix. Strive for staff-level engineering standards.

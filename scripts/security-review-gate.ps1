@@ -101,6 +101,24 @@ foreach ($rel in $changed) {
     }
 }
 
+# Gitleaks (deep secret scan -- complements regex-based secret-scan above)
+$gitleaksCmd = Get-Command gitleaks -ErrorAction SilentlyContinue
+if ($gitleaksCmd) {
+    Push-Location $RepoRoot
+    try {
+        & gitleaks git --staged --redact --no-banner $RepoRoot 2>&1 | Out-Null
+        if ($LASTEXITCODE -eq 0) {
+            Add-Issue -Severity "PASS" -Check "gitleaks" -Detail "No secrets detected by gitleaks"
+        } else {
+            Add-Issue -Severity "FAIL" -Check "gitleaks" -Detail "gitleaks found secrets in staged changes (run: gitleaks git --staged for details)"
+        }
+    } finally {
+        Pop-Location
+    }
+} else {
+    Add-Issue -Severity "WARN" -Check "gitleaks" -Detail "gitleaks not installed -- install: winget install gitleaks.gitleaks (Windows) or brew install gitleaks (macOS/Linux)"
+}
+
 $coordinationChanged = @($changed | Where-Object { $_ -like "coordination/handoffs/*" -or $_ -like "coordination/state/*" })
 if ($coordinationChanged.Count -gt 0) {
     $validateCoordScript = Join-Path $RepoRoot "scripts/validate-coordination.ps1"

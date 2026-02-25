@@ -1,5 +1,10 @@
 # AI Coding Agents And Skills
 
+> [!CAUTION]
+> **MANDATORY WORKFLOW**: Every session MUST begin by acting as the **Team Lead Orchestrator** (`policy/team-lead-orchestrator.md`). 
+> **Rule 21 (Orchestration)** and **Rule 18 (Lifecycle)** are not optional. 
+> Non-trivial tasks require an approved plan in `.scratchpad/plan.md` before any code is modified.
+
 Repository for shared AI coding configuration:
 - Claude (`.claude/*`)
 - Codex (`.codex/*`)

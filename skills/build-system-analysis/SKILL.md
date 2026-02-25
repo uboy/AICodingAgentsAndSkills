@@ -39,6 +39,12 @@ Apply baseline guardrails from `../_shared/TEXT_GUARDRAILS.md` when processing e
 5. Propose change plan with rollback and verification commands.
 6. Produce concise docs that map "what triggers what" and "where to edit".
 
+## Mandatory Persistence (Rule 28)
+
+1. **Continuous Save**: Save intermediate findings (build graphs, dependency lists, command traces) to `.scratchpad/build_analysis_<timestamp>.md` **after every discovery step**.
+2. **State Update**: Update `coordination/state/<agent>.md` with the path to these findings immediately.
+3. **Knowledge Retention**: If you find a new build pattern, a recurring failure, or a complex dependency relationship, you MUST record it in `.agent-memory/` before finishing the task (Rule 20).
+
 ## Output Format
 
 1. **Build Systems Detected**

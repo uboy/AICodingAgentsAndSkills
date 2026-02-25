@@ -70,9 +70,9 @@ foreach ($rel in $adapterFiles) {
 
     $lines = Get-Content -LiteralPath $path
     $lineCount = @($lines).Count
-    $hasAgentsRef = ($lines -join "`n") -match "AGENTS\.md"
+    $hasAgentsRef = ($lines -join "`n") -match "AGENTS(-hot|-warm|-cold|-hot-warm)?\.md"
     if (-not $hasAgentsRef) {
-        Add-Result -Severity "FAIL" -Check "adapter-thin" -Detail ("{0} must reference AGENTS.md" -f $rel)
+        Add-Result -Severity "FAIL" -Check "adapter-thin" -Detail ("{0} must reference AGENTS.md (or a tier file: AGENTS-hot.md, AGENTS-warm.md, etc.)" -f $rel)
     }
     if ($lineCount -gt 40) {
         Add-Result -Severity "FAIL" -Check "adapter-thin" -Detail ("{0} has {1} lines; expected <= 40" -f $rel, $lineCount)

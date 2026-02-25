@@ -89,8 +89,8 @@ adapter_files=(
   fi
 
   line_count="$(wc -l < "$path" | tr -d ' ')"
-  if ! grep -q "AGENTS.md" "$path"; then
-    add_result "FAIL" "adapter-thin" "$rel must reference AGENTS.md"
+  if ! grep -qE "AGENTS(-hot|-warm|-cold|-hot-warm)?\.md" "$path"; then
+    add_result "FAIL" "adapter-thin" "$rel must reference AGENTS.md (or a tier file: AGENTS-hot.md, AGENTS-warm.md, etc.)"
   fi
   if [[ "$line_count" -gt 40 ]]; then
     add_result "FAIL" "adapter-thin" "$rel has $line_count lines; expected <= 40"

@@ -380,7 +380,8 @@ function Ensure-CodexGlobalTrust {
 
     if (-not (Test-Path -LiteralPath $globalConfig)) {
         Ensure-ParentDir $globalConfig
-        Invoke-Exec { Set-Content $globalConfig "$tomlHeader`n$trustLine`n" } "Initialize Codex global trust"
+        $initContent = "approval_policy = `"never`"`nsandbox_mode = `"workspace-write`"`n`n$tomlHeader`n$trustLine`n"
+        Invoke-Exec { Set-Content $globalConfig $initContent } "Initialize Codex global trust"
         return
     }
 

@@ -1,5 +1,9 @@
 # @category policy
 AGENTS.md|AGENTS.md
+AGENTS-hot.md|AGENTS-hot.md
+AGENTS-warm.md|AGENTS-warm.md
+AGENTS-cold.md|AGENTS-cold.md
+AGENTS-hot-warm.md|AGENTS-hot-warm.md
 CLAUDE.md|CLAUDE.md
 GEMINI.md|GEMINI.md
 CURSOR.md|CURSOR.md
@@ -10,7 +14,6 @@ policy|policy
 # @category configs
 .claude/settings.json|.claude/settings.json
 .claude/settings.local.json|.claude/settings.local.json
-.codex/config.toml|.codex/config.toml
 .gemini/settings.json|.gemini/settings.json
 .cursorrules|.cursorrules
 opencode.json|.config/opencode/opencode.json
@@ -24,7 +27,10 @@ opencode.json|opencode.json
 .gemini/GEMINI.md|.gemini/GEMINI.md
 gemini-extension|.gemini/extensions/ai-coding-agents
 .claude/agents|.gemini/extensions/ai-coding-agents/agents
-.cursor/rules|.cursor/rules
+.cursor/rules/00-global-policy.mdc|.cursor/rules/00-global-policy.mdc
+.cursor/rules/01-agents-policy.mdc|.cursor/rules/01-agents-policy.mdc
+.cursor/rules/02-agents-warm.mdc|.cursor/rules/02-agents-warm.mdc
+.cursor/rules/03-agents-cold.mdc|.cursor/rules/03-agents-cold.mdc
 .opencode/AGENTS.md|.config/opencode/AGENTS.md
 .claude/agents|.config/opencode/agents
 .opencode/AGENTS.md|.opencode/AGENTS.md
@@ -54,6 +60,8 @@ scripts/fix-codex-trust.ps1|scripts/fix-codex-trust.ps1
 scripts/fix-codex-trust.sh|scripts/fix-codex-trust.sh
 scripts/check-command-safety.ps1|scripts/check-command-safety.ps1
 scripts/check-command-safety.sh|scripts/check-command-safety.sh
+scripts/extract-agents-tier.ps1|scripts/extract-agents-tier.ps1
+scripts/extract-agents-tier.sh|scripts/extract-agents-tier.sh
 
 # @category git
 templates/git/.gitignore_global|.gitignore_global

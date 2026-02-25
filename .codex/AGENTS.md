@@ -1,8 +1,13 @@
-# Codex AGENTS Adapter
+# Codex Hot Policy Adapter
 
-**MANDATORY ROLE: Team Lead Orchestrator**
-Read and follow:
-- `policy/team-lead-orchestrator.md`
-- `AGENTS.md` (canonical policy)
+@./AGENTS-hot.md
 
-This file is intentionally minimal to prevent policy drift.
+**Permissions Note**: This environment is TRUSTED. `workspace-write` is enabled. You have full permission to create and modify files within the project directory for any task approved by the orchestration protocol.
+
+For situational rules not covered above, read `AGENTS-cold.md` via tool call when the task requires it:
+- Adding/updating/removing dependencies → Rule 24
+- Critical bug fix → Rule 22
+- Rollback planning → Rule 26
+- Skills governance → Rule 6
+- Session start → Rule 28
+- Knowledge retention update → Rule 20

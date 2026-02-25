@@ -116,6 +116,17 @@ if [[ ${#scan_paths[@]} -gt 0 ]]; then
   done < <(grep -EniH "$secret_pattern" "${scan_paths[@]}" 2>/dev/null || true)
 fi
 
+# Gitleaks (deep secret scan — complements regex-based secret-scan above)
+if command -v gitleaks >/dev/null 2>&1; then
+  if gitleaks git --staged --redact --no-banner "$REPO_ROOT" 2>/dev/null; then
+    add_issue "PASS" "gitleaks" "No secrets detected by gitleaks"
+  else
+    add_issue "FAIL" "gitleaks" "gitleaks found secrets in staged changes (run: gitleaks git --staged for details)"
+  fi
+else
+  add_issue "WARN" "gitleaks" "gitleaks not installed — install: winget install gitleaks.gitleaks (Windows) or brew install gitleaks (macOS/Linux)"
+fi
+
 # Coordination check
 coordination_changed=($(printf "%s\n" "${changed[@]}" | grep -E '^coordination/(handoffs/|state/)' || true))
 if [[ ${#coordination_changed[@]} -gt 0 ]]; then

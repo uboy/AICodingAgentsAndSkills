@@ -34,6 +34,29 @@ Additional controls on top of baseline:
 4. Reliability scoring:
 - evaluate tasks with `pass@k` and `pass^k` before broad rollout.
 
+## Weak-Model Workflow (Micro-Stepping)
+
+When a weak model is active (e.g., `gpt-oss-120b` or local model), the following **Agent-Led Dialogue** is mandatory:
+
+### 1. Mandatory Pre-Flight Questions
+The agent MUST ask the user before starting any tool-use task:
+- "I am in weak-model mode. Which **single** file should I focus on for this micro-step?"
+- "What is the **exact** line range or function name to modify?"
+- "What is the **minimal** shell command to verify ONLY this change?"
+
+### 2. Task Formulation (User -> Agent)
+Users are encouraged to use the **Action-Context-Result** format:
+`[FILE] + [PRECISE_CHANGE_DESCRIPTION] + [ACCEPTANCE_CRITERIA]`
+
+Example:
+`src/auth.ts + add "admin" to UserRoles enum + syntax check passes`
+
+### 3. Reliability Rules (Rule 14 & 23)
+- **Context Capping**: Read only 1 file per turn. No recursive `ls`.
+- **Atomic Edits**: Max 30 lines of change per edit.
+- **Verification Loop**: Run syntax/linter after **every single file mutation**.
+- **No Refactoring**: Do not perform "cleanup" outside the requested scope.
+
 ## Activation
 
 Use profile key from `policy/tool-permissions-profiles.json`:

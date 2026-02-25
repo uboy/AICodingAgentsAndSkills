@@ -1,0 +1,11 @@
+{
+  "id": "git-auto-commit-violation",
+  "technology": "git",
+  "skills": ["git-management"],
+  "applies_to_systems": ["gemini", "claude", "codex", "cursor", "opencode"],
+  "summary": "NEVER interpret 'deploy', 'finish', 'wrap up', or 'apply changes' as permission to 'git commit'. Only the explicit word 'commit' allows git commit operations.",
+  "recorded_on": "2026-02-25",
+  "last_verified_on": "2026-02-25",
+  "verify_after_days": 90,
+  "status": "active"
+}
