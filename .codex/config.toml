@@ -13,3 +13,7 @@ gpt-5-codex = "gpt-5.3-codex"
 multi_agent = true
 trust_repository = true
 
+
+[projects.'\\?\C:\Users\devl\proj\AICodingAgentsAndSkills']
+trust_level = "trusted"
+
