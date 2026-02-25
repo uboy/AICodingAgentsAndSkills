@@ -144,7 +144,8 @@ function Select-Action([string]$Source, [string]$Target) {
     if ($ConflictAction -ne "ask") {
         return $ConflictAction
     }
-    if ($NonInteractive) {
+    # Fall back to keep when not interactive
+    if ($NonInteractive -or -not [System.Environment]::UserInteractive) {
         return "keep"
     }
 
@@ -155,7 +156,12 @@ function Select-Action([string]$Source, [string]$Target) {
     Write-Host "[M]erge into local file (conflict markers, no link)"
     Write-Host "[K]eep local file (no link)"
     while ($true) {
-        $choice = (Read-Host "Choose action [R/M/K]").Trim().ToLowerInvariant()
+        try {
+            $choice = (Read-Host "Choose action [R/M/K]").Trim().ToLowerInvariant()
+        } catch {
+            # Read-Host failed (non-interactive host) — keep local
+            return "keep"
+        }
         switch ($choice) {
             "r" { return "replace" }
             "m" { return "merge" }

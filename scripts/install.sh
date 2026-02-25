@@ -190,7 +190,8 @@ select_action() {
     echo "$CONFLICT_ACTION"
     return
   fi
-  if [[ $NON_INTERACTIVE -eq 1 ]]; then
+  # Fall back to keep when not interactive (no TTY or --non-interactive flag)
+  if [[ $NON_INTERACTIVE -eq 1 ]] || [[ ! -t 0 ]]; then
     echo "keep"
     return
   fi
@@ -202,7 +203,11 @@ select_action() {
   echo "[M]erge into local file (conflict markers, no link)"
   echo "[K]eep local file (no link)"
   while true; do
-    read -r -p "Choose action [R/M/K]: " answer
+    if ! read -r -p "Choose action [R/M/K]: " answer; then
+      # EOF on stdin — treat as non-interactive, keep local
+      echo "keep"
+      return
+    fi
     answer="$(echo "$answer" | tr '[:upper:]' '[:lower:]')"
     case "$answer" in
       r) echo "replace"; return ;;
