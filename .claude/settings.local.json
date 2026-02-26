@@ -33,7 +33,8 @@
       "WebFetch(domain:geminicli.com)",
       "WebFetch(domain:google-gemini.github.io)",
       "Bash(grep:*)",
-      "Bash(powershell.exe:*)"
+      "Bash(powershell.exe:*)",
+      "WebFetch(domain:developers.openai.com)"
     ]
   }
 }

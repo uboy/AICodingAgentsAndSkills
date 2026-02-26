@@ -23,6 +23,7 @@ Shared reusable skills for AI agents in this repository.
 - `api-contract-review`: API compatibility and schema contract review.
 - `build-system-analysis`: analyze large multi-tool build pipelines and produce target-change recipes.
 - `large-codebase-context`: context-budgeted workflow for reliable work in very large repositories.
+- `task-progress`: interactive assistant for writing high-quality English task progress comments (ArkUI/OpenHarmony focus, questions in Russian).
 
 ## Why this structure
 

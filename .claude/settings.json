@@ -1,3 +1,7 @@
 {
-  "autoUpdatesChannel": "latest"
+  "autoUpdatesChannel": "latest",
+  "statusLine": {
+    "type": "command",
+    "command": "input=$(cat); model=$(echo \"$input\" | jq -r '.model.display_name // \"unknown\"'); pct=$(echo \"$input\" | jq -r '.context_window.used_percentage // empty'); used_in=$(echo \"$input\" | jq -r '.context_window.total_input_tokens // 0'); used_out=$(echo \"$input\" | jq -r '.context_window.total_output_tokens // 0'); win=$(echo \"$input\" | jq -r '.context_window.context_window_size // 0'); total_k=$(echo \"$used_in $used_out\" | awk '{printf \"%dk\", ($1+$2)/1000}'); win_k=$(echo \"$win\" | awk '{printf \"%dk\", $1/1000}'); if [ -n \"$pct\" ]; then pct_int=$(printf \"%.0f\" \"$pct\"); echo \"$model | ctx ${pct_int}% (${total_k}/${win_k}) | ${total_k} tok\"; else echo \"$model | ctx -% (-/-) | - tok\"; fi"
+  }
 }

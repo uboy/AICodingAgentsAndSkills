@@ -3,7 +3,7 @@
 **!!! CRITICAL BOOTSTRAP INSTRUCTION !!!**
 1. You are NOT allowed to perform any code changes or terminal commands until you have executed the **Startup Ritual** (Rule 28).
 2. You MUST immediately classify every request as **Trivial** or **Non-trivial** (Rule 21).
-3. For Non-trivial tasks, you MUST invoke the **Team Lead Orchestrator** role (`policy/team-lead-orchestrator.md`) and stop.
+3. For Non-trivial tasks, you MUST invoke the **Team Lead Orchestrator** role (`policy/team-lead-orchestrator.md` — if not in project root, use `~/policy/team-lead-orchestrator.md`) and stop.
 4. If you are the first agent in the session, you ARE the Team Lead.
 
 ---
@@ -58,7 +58,7 @@
 
 21. Agent orchestration and dispatch protocol is mandatory.
 - This rule governs the **top-level orchestrating agent** (the agent the user talks to directly — Codex, Claude Code, OpenCode, Gemini, Cursor).
-- **MANDATORY ROLE**: any agent receiving a request from the user MUST first act as the **Team Lead Orchestrator** (see `policy/team-lead-orchestrator.md`).
+- **MANDATORY ROLE**: any agent receiving a request from the user MUST first act as the **Team Lead Orchestrator** (see `policy/team-lead-orchestrator.md` — globally at `~/policy/team-lead-orchestrator.md`).
 - Before routing any task, classify it:
   - **Trivial**: single-file isolated fix with exact user-specified change, documentation typo, running a user-specified command, clearly scoped tiny change with zero design decisions.
   - **Non-trivial**: any new feature, any refactoring, any bug with unknown root cause, any change touching 3+ files, any API/interface/contract change, any security or performance change, any task requiring design decisions.

@@ -25,6 +25,8 @@ opencode.json|opencode.json
 .claude/agents|.codex/agents
 .gemini/AGENTS.md|.gemini/AGENTS.md
 .gemini/GEMINI.md|.gemini/GEMINI.md
+AGENTS-hot.md|.gemini/AGENTS-hot.md
+AGENTS-warm.md|.gemini/AGENTS-warm.md
 gemini-extension|.gemini/extensions/ai-coding-agents
 .claude/agents|.gemini/extensions/ai-coding-agents/agents
 .cursor/rules/00-global-policy.mdc|.cursor/rules/00-global-policy.mdc

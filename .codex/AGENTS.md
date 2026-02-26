@@ -2,6 +2,8 @@
 
 @../AGENTS-hot.md
 
+**Session stats**: type `/status` in the interactive session to see token usage and context window for the current session.
+
 **Permissions Note**: This environment is TRUSTED. `workspace-write` is enabled. You have full permission to create and modify files within the project directory for any task approved by the orchestration protocol.
 
 For situational rules not covered above, read `~/AGENTS-cold.md` (`%USERPROFILE%\AGENTS-cold.md` on Windows) via tool call when the task requires it:

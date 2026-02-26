@@ -63,8 +63,8 @@
 28. Context Resumption, Startup Ritual, and Continuous Persistence are mandatory.
 - Agents MUST NOT assume they start with a clean slate.
 - **Startup Ritual**: at the beginning of every session, the agent MUST:
-  1. Read `coordination/tasks.jsonl` to check for `in_progress` tasks assigned to it.
-  2. Read its own state file `coordination/state/<agent>.md`.
+  1. Read `coordination/tasks.jsonl` to check for `in_progress` tasks assigned to it. (Skip silently if file does not exist in current project — this rule applies only within the AICodingAgentsAndSkills repository.)
+  2. Read its own state file `coordination/state/<agent>.md`. (Skip silently if not present.)
   3. If a task is in progress, synchronize the current state and resume from the last saved checkpoint without asking the user for the history.
 - **Continuous Persistence**: The agent MUST update its state in `coordination/state/<agent>.md` **after every significant finding or tool call**, not just at the end of a micro-step.
 - For large context (code snippets, complex logs, build analysis), use files in `.scratchpad/` and store their paths in the state file.
