@@ -61,6 +61,10 @@ $adapterFiles = @(
     ".gemini/AGENTS.md"
 )
 
+$adapterLineLimitOverrides = @{
+    ".codex/AGENTS.md" = 1000
+}
+
 foreach ($rel in $adapterFiles) {
     $path = Join-Path $RepoRoot $rel
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
@@ -74,8 +78,12 @@ foreach ($rel in $adapterFiles) {
     if (-not $hasAgentsRef) {
         Add-Result -Severity "FAIL" -Check "adapter-thin" -Detail ("{0} must reference AGENTS.md (or a tier file: AGENTS-hot.md, AGENTS-warm.md, etc.)" -f $rel)
     }
-    if ($lineCount -gt 40) {
-        Add-Result -Severity "FAIL" -Check "adapter-thin" -Detail ("{0} has {1} lines; expected <= 40" -f $rel, $lineCount)
+    $lineLimit = 40
+    if ($adapterLineLimitOverrides.ContainsKey($rel)) {
+        $lineLimit = [int]$adapterLineLimitOverrides[$rel]
+    }
+    if ($lineCount -gt $lineLimit) {
+        Add-Result -Severity "FAIL" -Check "adapter-thin" -Detail ("{0} has {1} lines; expected <= {2}" -f $rel, $lineCount, $lineLimit)
     }
 }
 

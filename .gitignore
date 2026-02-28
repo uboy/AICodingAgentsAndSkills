@@ -21,6 +21,7 @@
 # Claude Code runtime
 .claude/debug/
 .claude/cache/
+.claude/settings.local.json
 .claude/shell-snapshots/
 .claude/paste-cache/
 .claude/projects/

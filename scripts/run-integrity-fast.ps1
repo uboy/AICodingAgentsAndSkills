@@ -91,13 +91,22 @@ if (-not $bash -and (Test-Path "C:\Program Files\Git\bin\bash.exe")) {
 if ($shTargets.Count -gt 0 -and -not $bash) {
     Add-Result -Severity "WARN" -Check "bash-parse" -Detail "bash not available; unable to run .sh syntax checks."
 } else {
+    $bashEnvIssueReported = $false
     foreach ($path in $shTargets) {
         if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
         $cmd = if ($bash -is [System.Management.Automation.CommandInfo]) { $bash.Source } else { $bash.FullName }
-        & $cmd -n $path 2>$null
+        $bashOutput = & $cmd -n $path 2>&1
         if ($LASTEXITCODE -ne 0) {
             $rel = [System.IO.Path]::GetRelativePath($RepoRoot, $path)
-            Add-Result -Severity "FAIL" -Check "bash-parse" -Detail ("bash -n failed for {0}" -f $rel)
+            $bashText = ($bashOutput | Out-String)
+            if ($bashText -match "couldn't create signal pipe|Win32 error 5|Access is denied") {
+                if (-not $bashEnvIssueReported) {
+                    Add-Result -Severity "WARN" -Check "bash-parse" -Detail "bash exists but cannot run in current runtime (permission/sandbox limitation); skipped .sh syntax checks."
+                    $bashEnvIssueReported = $true
+                }
+            } else {
+                Add-Result -Severity "FAIL" -Check "bash-parse" -Detail ("bash -n failed for {0}" -f $rel)
+            }
         }
     }
 }

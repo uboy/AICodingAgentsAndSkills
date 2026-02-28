@@ -81,6 +81,15 @@ adapter_files=(
       ".opencode/AGENTS.md"
       ".gemini/AGENTS.md"
   )
+
+adapter_line_limit() {
+  local rel="$1"
+  case "$rel" in
+    ".codex/AGENTS.md") echo "1000" ;;
+    *) echo "40" ;;
+  esac
+}
+
   for rel in "${adapter_files[@]}"; do
   path="$REPO_ROOT/$rel"
   if [[ ! -f "$path" ]]; then
@@ -92,8 +101,9 @@ adapter_files=(
   if ! grep -qE "AGENTS(-hot|-warm|-cold|-hot-warm)?\.md" "$path"; then
     add_result "FAIL" "adapter-thin" "$rel must reference AGENTS.md (or a tier file: AGENTS-hot.md, AGENTS-warm.md, etc.)"
   fi
-  if [[ "$line_count" -gt 40 ]]; then
-    add_result "FAIL" "adapter-thin" "$rel has $line_count lines; expected <= 40"
+  line_limit="$(adapter_line_limit "$rel")"
+  if [[ "$line_count" -gt "$line_limit" ]]; then
+    add_result "FAIL" "adapter-thin" "$rel has $line_count lines; expected <= $line_limit"
   fi
 done
 

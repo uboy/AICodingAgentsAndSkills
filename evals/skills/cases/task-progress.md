@@ -62,3 +62,27 @@ RK3568 под OH 4.1, фрейм-дроп не наблюдается.
 4. `Next` section mentions removal timeline / deprecation period.
 5. No clarifying questions asked — input is sufficient.
 6. Output is in English.
+
+---
+
+## Case 4 — Progress update with parent task spec reference
+
+### Input
+
+```
+Task: OHUI-9001 - Optimize contacts list rendering in ArkUI.
+Task spec reference:
+- Scope: migrate list rendering to LazyForEach with stable keyGenerator
+- AC-1: no visible frame drops while scrolling 1000 contacts
+- AC-2: no item state loss on reorder
+Done: implemented LazyForEach with stable keys, verified smooth scrolling on RK3568 test device.
+Next: add automated regression test for reorder state preservation.
+Artifacts: PR #321
+```
+
+### Acceptance Checks
+
+1. Output includes `Acceptance Coverage` section.
+2. `Acceptance Coverage` reflects AC-1 as met and AC-2 as pending/at_risk (until test is added).
+3. Output aligns `Done/Next` with declared task scope.
+4. Output is in English and contains no invented timelines.

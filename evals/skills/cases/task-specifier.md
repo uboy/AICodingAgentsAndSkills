@@ -1,18 +1,42 @@
 # Eval: task-specifier
 
-## Scenario
-User wants to add a new "about" page to a React project.
+## Case 1 - Feature task with partial input
 
-## Input
-"I want to add a simple about page with some text and a contact button."
+### Input
 
-## Expected Output
-- **Title**: Add About page component and route
-- **Inputs**: `src/App.tsx`, `src/components/Layout.tsx`
-- **Outputs**: `src/pages/About.tsx`, `src/App.tsx`
-- **Checklist**:
-  - [todo] Create `src/pages/About.tsx` with content and button.
-  - [todo] Import `About` page in `src/App.tsx`.
-  - [todo] Add route for `/about` in `src/App.tsx`.
-  - [todo] Verify page renders correctly.
-- **TASK_JSON**: Valid JSON object containing the above fields.
+```
+Нужно добавить страницу About с описанием продукта и кнопкой связи.
+```
+
+### Acceptance Checks
+
+1. Output starts with `Clarifying Questions` section.
+2. Output includes `Recommendations` section.
+3. Output includes `Final Task Description` with `Task Type`.
+4. Output includes `Expected Outcome` and `Proposed Change (High-Level)`.
+5. Output includes `Out of Scope`.
+6. Output does not contain `Subtasks` section.
+7. Missing unknown fields are marked as `not specified`.
+
+---
+
+## Case 2 - Bug task with explicit repro details
+
+### Input
+
+```
+Тип: bug.
+Краш в профиле пользователя при открытии после logout/login.
+Шаги: 1) Войти, 2) Выйти, 3) Войти заново, 4) Открыть профиль.
+Ожидаемое: профиль открывается.
+Фактическое: приложение падает.
+```
+
+### Acceptance Checks
+
+1. Output keeps `Task Type` as `bug`.
+2. `Expected Outcome` and `Scope` clearly describe the bug fix target.
+3. Output includes `Clarifying Questions` before final description.
+4. `Verification` includes explicit repro regression checks.
+5. `Dependencies / Risks` exists with at least one concrete risk.
+6. Output does not contain any decomposition into subtasks.

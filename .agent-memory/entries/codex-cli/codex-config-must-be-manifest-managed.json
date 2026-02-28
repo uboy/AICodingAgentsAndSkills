@@ -1,0 +1,16 @@
+{
+  "id": "codex-config-must-be-manifest-managed",
+  "technology": "codex-cli",
+  "skills": ["agent-config", "deployment"],
+  "applies_to_systems": ["codex"],
+  "summary": "Ensure Codex runtime config (~/.codex/config.toml) is included in deploy/manifest.txt. Otherwise user-level config drifts and policy behavior diverges from repository expectations.",
+  "source_links": [
+    "https://developers.openai.com/codex/config",
+    "https://developers.openai.com/codex/config-reference",
+    "user-correction:2026-02-28"
+  ],
+  "recorded_on": "2026-02-28",
+  "last_verified_on": "2026-02-28",
+  "verify_after_days": 60,
+  "status": "active"
+}

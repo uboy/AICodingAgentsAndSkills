@@ -142,12 +142,21 @@ if ($shFiles.Count -gt 0) {
     if (-not $bash) {
         Add-Issue -Severity "WARN" -Check "bash-parse" -Detail "bash not available; skipped .sh syntax checks."
     } else {
+        $bashEnvIssueReported = $false
         foreach ($rel in $shFiles) {
             $path = Join-Path $RepoRoot $rel
             $cmd = if ($bash -is [System.Management.Automation.CommandInfo]) { $bash.Source } else { $bash.FullName }
-            & $cmd -n $path 2>$null
+            $bashOutput = & $cmd -n $path 2>&1
             if ($LASTEXITCODE -ne 0) {
-                Add-Issue -Severity "FAIL" -Check "bash-parse" -Detail ("bash -n failed for {0}" -f $rel)
+                $bashText = ($bashOutput | Out-String)
+                if ($bashText -match "couldn't create signal pipe|Win32 error 5|Access is denied") {
+                    if (-not $bashEnvIssueReported) {
+                        Add-Issue -Severity "WARN" -Check "bash-parse" -Detail "bash exists but cannot run in current runtime (permission/sandbox limitation); skipped .sh syntax checks."
+                        $bashEnvIssueReported = $true
+                    }
+                } else {
+                    Add-Issue -Severity "FAIL" -Check "bash-parse" -Detail ("bash -n failed for {0}" -f $rel)
+                }
             }
         }
     }

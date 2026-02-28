@@ -1,0 +1,4 @@
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+trust_repository = true
+project_doc_max_bytes = 65536

@@ -1,0 +1,12 @@
+{
+  "id": "single-task-description-no-decomposition",
+  "technology": "task-specifier",
+  "skills": ["task-specifier", "openharmony-task-specifier"],
+  "applies_to_systems": ["claude", "codex", "cursor", "gemini", "opencode"],
+  "summary": "These skills must assist in describing one task only: ask guiding questions first, provide recommendations, and output one final description. Do not decompose into subtasks or step-by-step implementation plans.",
+  "source_links": ["user-correction:2026-02-27"],
+  "recorded_on": "2026-02-27",
+  "last_verified_on": "2026-02-27",
+  "verify_after_days": 90,
+  "status": "active"
+}

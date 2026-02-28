@@ -1,0 +1,12 @@
+{
+  "id": "task-type-taxonomy-no-maintenance",
+  "technology": "task-specifier",
+  "skills": ["task-specifier", "openharmony-task-specifier"],
+  "applies_to_systems": ["claude", "codex", "cursor", "gemini", "opencode"],
+  "summary": "Do not use task type 'maintenance' in this project taxonomy. Use 'support' for auxiliary tasks.",
+  "source_links": ["user-correction:2026-02-27"],
+  "recorded_on": "2026-02-27",
+  "last_verified_on": "2026-02-27",
+  "verify_after_days": 90,
+  "status": "active"
+}

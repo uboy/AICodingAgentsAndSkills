@@ -94,6 +94,14 @@ Utility to add the current project to the global Codex trusted list:
 - Windows 11: `scripts/fix-codex-trust.ps1`
 - Linux/macOS: `scripts/fix-codex-trust.sh`
 
+Codex runtime settings are deployed from:
+- `configs/codex/config.toml` -> `~/.codex/config.toml`
+
+Current baseline:
+- `approval_policy = "never"`
+- `sandbox_mode = "workspace-write"`
+- `project_doc_max_bytes = 65536` (prevents AGENTS loading truncation in layered policy setups)
+
 ## Permissions Policy Enforcement
 
 Machine-readable profile:
@@ -406,6 +414,23 @@ Audit output includes statuses:
 - `OK-EQUAL`: target is not linked but content is equal
 - `EXTRA`: file exists in deployed target directory but has no source counterpart
 - `SOURCE-MISSING`: manifest source entry is missing in repository
+
+Codex check after install:
+- verify `.codex/config.toml` is `OK-LINKED` or `OK-EQUAL` in audit output
+- if status is `DIFFERENT`, re-run install with conflict action `replace`
+
+## Claude Code Runtime Verification (Post-Install)
+
+After deployment, verify that Claude Code is using the expected files:
+
+1. Start Claude Code from the project root.
+2. Run `/memory` and confirm project `CLAUDE.md`/policy files are loaded as expected.
+3. Run `/agents` and confirm expected project agents are present.
+4. If you changed `CLAUDE.md` or `.claude/agents/*.md`, restart the session before re-checking.
+
+Why this matters:
+- Claude Code loads memory/subagent context at session start.
+- A stale session can make newly deployed changes appear ignored.
 
 ## Parallel Multi-Agent Workflow
 

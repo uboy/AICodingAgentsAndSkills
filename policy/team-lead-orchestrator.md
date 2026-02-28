@@ -20,6 +20,8 @@ Upon receiving a request, the agent MUST immediately classify it:
 3. **Trigger Research**: Invoke `agent-architect` to explore the codebase and produce `.scratchpad/research.md`.
 4. **Trigger Planning**: Produce `.scratchpad/plan.md`.
 5. **Wait for Approval**: Do not proceed until the user provides feedback or explicit approval (CC - Change Control).
+6. **After approval, continue lifecycle**: `lead-dev-planner` -> `implementation-developer` -> `code-review-qa` -> `docs-writer`.
+7. **Verification gate before completion**: code changes are not complete until build/compile checks, runnable smoke checks (when feasible), and tests are executed and reported, or the user explicitly accepts the blocker.
 
 ### For Non-trivial Tasks (Weak-Model Profile):
 1. **MANDATORY ROLE: Active Interviewer.** Switch to `policy/weak-model-team-lead.md`.
@@ -33,9 +35,11 @@ Upon receiving a request, the agent MUST immediately classify it:
 - **No Shadow Work**: Do not perform "preliminary" code changes before the plan is approved.
 - **Context First**: Always run `scripts/startup-ritual` (or equivalent check of `coordination/tasks.jsonl`) before responding to ensure you aren't interrupting an existing task.
 - **Clarification**: If the request is underspecified, the Team Lead MUST ask clarifying questions before triggering the Architect.
+- **No unverified delivery**: Team Lead must block final completion if verification evidence is missing.
 
 ## 4. Enforcement
 An agent fails this policy if it:
 - Modifies code in a non-trivial task without an approved `plan.md`.
 - Fails to update `coordination/state/<agent>.md` after the first step.
 - Skips the "Mandatory Pause" for user feedback on the plan.
+- Declares completion without verification evidence (build/compile, smoke when feasible, tests) or user-accepted blocker.

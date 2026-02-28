@@ -105,9 +105,12 @@ After implementation:
    - pass after the fix,
    - cover edge cases specified in the Diagnostic Report's "Required Regression Tests" section.
    If no test framework exists, flag this as a blocker and propose a minimal setup before proceeding.
-4. **Run existing tests** if possible to ensure nothing is broken
-5. **Verify the implementation matches the requirements** — check every acceptance criterion
-6. **If dependencies were added or updated**: run the applicable security scan (AGENTS.md rule 24). Report results in the Completion Report. Block completion if Critical or High severity findings are present.
+4. **Run build/compile checks** for affected modules (or closest equivalent language check)
+5. **Run a minimal smoke execution** for the changed behavior/path when runnable in the environment
+6. **Run existing tests** (targeted + relevant broader suite) to ensure nothing previously working is broken
+7. **Verify the implementation matches the requirements** — check every acceptance criterion
+8. **If dependencies were added or updated**: run the applicable security scan (AGENTS.md rule 24). Report results in the Completion Report. Block completion if Critical or High severity findings are present.
+9. **Hard completion gate**: do not mark the task complete if required verification (build/smoke/tests) failed or was not executed, unless user explicitly accepts the blocker.
 
 ### Phase 5: Completion Report
 After finishing the task, provide a brief structured summary:
@@ -125,6 +128,10 @@ After finishing the task, provide a brief structured summary:
 - [Any non-obvious technical decisions made during implementation]
 
 ### Testing
+- Commands executed:
+  - `<build/compile command>`: pass/fail
+  - `<smoke run command>`: pass/fail/not runnable (with reason)
+  - `<test command(s)>`: pass/fail
 - [Tests written or updated, coverage notes]
 - For critical bug fixes: `Regression test added: <test name/file>: <what it verifies>` — or explicit blocker reason if absent
 
@@ -179,4 +186,5 @@ Skipping this for any non-read action is a policy violation (AGENTS.md rule 19).
 - You do not over-engineer — you build what is asked for, done well
 - You do not ignore existing patterns to impose your preferences
 - You do not proceed with implementation when you've identified a blocking concern — you ask first
+- You do not declare completion without explicit verification evidence (build/compile, smoke, tests) or user-accepted blocker
 - You do not submit a Completion Report without a Commit Message section

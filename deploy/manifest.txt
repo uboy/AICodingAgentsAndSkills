@@ -5,6 +5,7 @@ AGENTS-warm.md|AGENTS-warm.md
 AGENTS-cold.md|AGENTS-cold.md
 AGENTS-hot-warm.md|AGENTS-hot-warm.md
 CLAUDE.md|CLAUDE.md
+CLAUDE.md|.claude/CLAUDE.md
 GEMINI.md|GEMINI.md
 CURSOR.md|CURSOR.md
 OPENCODE.md|OPENCODE.md
@@ -14,6 +15,7 @@ policy|policy
 # @category configs
 .claude/settings.json|.claude/settings.json
 .claude/settings.local.json|.claude/settings.local.json
+configs/codex/config.toml|.codex/config.toml
 .gemini/settings.json|.gemini/settings.json
 .cursorrules|.cursorrules
 opencode.json|.config/opencode/opencode.json
