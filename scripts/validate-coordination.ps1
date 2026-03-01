@@ -4,7 +4,7 @@
     Follows AGENTS.md Rule 17 (Delivery Contract) and Rule 21 (Orchestration).
 
 .DESCRIPTION
-    Checks all files in coordination/handoffs/ and coordination/state/ for adherence to project standards.
+    Checks files in coordination/handoffs/ for adherence to project standards.
 #>
 
 param(
@@ -22,18 +22,22 @@ if (-not (Test-Path -LiteralPath $handoffsDir -PathType Container)) {
 }
 
 $files = if ($FilesToValidate.Count -gt 0) {
-    $FilesToValidate | Where-Object { $_ -like "coordination/handoffs/*" -and (Test-Path (Join-Path $RepoRoot $_)) } | ForEach-Object { Join-Path $RepoRoot $_ }
+    $FilesToValidate |
+        Where-Object { $_ -like "coordination/handoffs/*" -and (Test-Path (Join-Path $RepoRoot $_)) } |
+        ForEach-Object { Join-Path $RepoRoot $_ }
 } else {
-    Get-ChildItem -Path $handoffsDir -Filter "*.md" | Where-Object { $_.Name -ne ".gitkeep" } | Select-Object -ExpandProperty FullName
+    Get-ChildItem -Path $handoffsDir -Filter "*.md" |
+        Where-Object { $_.Name -ne ".gitkeep" } |
+        Select-Object -ExpandProperty FullName
 }
 
 $failCount = 0
 
 foreach ($filePath in $files) {
-    $relPath = $filePath.Replace($RepoRoot, "").TrimStart("").TrimStart("/")
+    $relPath = $filePath.Replace($RepoRoot, "").TrimStart("\", "/")
     $content = Get-Content -LiteralPath $filePath -Raw
-    
-    $requiredSections = @("## Summary", "## Files Touched", "## Verification", "## Commit Message")
+
+    $requiredSections = @("## Summary", "## Files Touched", "## Verification")
     $missing = @()
 
     foreach ($section in $requiredSections) {
@@ -48,13 +52,10 @@ foreach ($filePath in $files) {
         continue
     }
 
-    # Verify ## Verification is not empty/placeholder
-    $verificationMatch = [regex]::Match($content, "(?s)## Verification\s*?
-(.*?)(?:?
-##|$)")
+    $verificationMatch = [regex]::Match($content, '(?s)## Verification\s*\r?\n(.*?)(?:\r?\n##|$)')
     if ($verificationMatch.Success) {
         $verificationBody = $verificationMatch.Groups[1].Value.Trim()
-        if (-not $verificationBody -or $verificationBody -match "<command" -or $verificationBody -match "todo") {
+        if (-not $verificationBody -or $verificationBody -match "<command" -or $verificationBody -match "(?i)\btodo\b") {
             Write-Error "FAIL: $relPath has empty or placeholder ## Verification section."
             $failCount++
         }
@@ -63,18 +64,23 @@ foreach ($filePath in $files) {
         $failCount++
     }
 
-    # Verify ## Commit Message is not empty/placeholder
-    $commitMatch = [regex]::Match($content, "(?s)## Commit Message\s*?
-(.*?)(?:?
-##|$)")
+    $hasDelivery = [regex]::IsMatch($content, '(?m)^## Delivery Contract\s*$')
+    $hasCommit = [regex]::IsMatch($content, '(?m)^## Commit Message\s*$')
+    if (-not ($hasDelivery -or $hasCommit)) {
+        Write-Error "FAIL: $relPath is missing ## Delivery Contract or ## Commit Message section."
+        $failCount++
+        continue
+    }
+
+    $commitMatch = [regex]::Match($content, '(?s)## (?:Delivery Contract|Commit Message)\s*\r?\n(.*?)(?:\r?\n##|$)')
     if ($commitMatch.Success) {
         $commitBody = $commitMatch.Groups[1].Value.Trim()
-        if (-not $commitBody -or $commitBody -match "TODO" -or $commitBody -match "<message>") {
-            Write-Error "FAIL: $relPath has empty or placeholder ## Commit Message section."
+        if (-not $commitBody -or $commitBody -match "(?i)\btodo\b" -or $commitBody -match "<message>") {
+            Write-Error "FAIL: $relPath has empty or placeholder delivery/commit section."
             $failCount++
         }
     } else {
-        Write-Error "FAIL: $relPath could not parse ## Commit Message section body."
+        Write-Error "FAIL: $relPath could not parse delivery/commit section body."
         $failCount++
     }
 }

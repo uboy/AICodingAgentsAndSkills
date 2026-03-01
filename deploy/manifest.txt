@@ -66,6 +66,8 @@ scripts/check-command-safety.ps1|scripts/check-command-safety.ps1
 scripts/check-command-safety.sh|scripts/check-command-safety.sh
 scripts/extract-agents-tier.ps1|scripts/extract-agents-tier.ps1
 scripts/extract-agents-tier.sh|scripts/extract-agents-tier.sh
+scripts/render-status-line.ps1|scripts/render-status-line.ps1
+scripts/render-status-line.sh|scripts/render-status-line.sh
 
 # @category git
 templates/git/.gitignore_global|.gitignore_global

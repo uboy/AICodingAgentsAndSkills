@@ -15,5 +15,9 @@
     "edit": "allow",
     "write": "allow",
     "webfetch": "ask"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"$HOME/scripts/render-status-line.sh\" opencode"
   }
 }

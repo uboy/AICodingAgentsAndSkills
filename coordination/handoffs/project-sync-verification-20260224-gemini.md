@@ -55,3 +55,6 @@ Completed comprehensive project synchronization, policy enforcement, and AI agen
 
 ## Delivery Contract
 Commit pending user approval.
+
+## Commit Message
+chore(sync): align project policy, coordination gates, and task-specifier workflow

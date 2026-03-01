@@ -2,6 +2,10 @@
   "context": {
     "fileName": ["GEMINI.md"]
   },
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"$HOME/scripts/render-status-line.sh\" gemini"
+  },
   "security": {
     "auth": {
       "selectedType": "oauth-personal"

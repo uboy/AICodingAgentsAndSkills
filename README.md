@@ -164,6 +164,43 @@ Adapter behavior:
 - project root `GEMINI.md` imports canonical project policy files
 - `.gemini/GEMINI.md` uses parent-relative imports (`@../AGENTS-hot.md`, `@../AGENTS-warm.md`) so it resolves both in-repo and after deploy to `~/.gemini`
 
+## Status Line (Agent / Skill / Step / Checklist)
+
+Shared status renderer scripts:
+
+- Windows 11: `scripts/render-status-line.ps1`
+- Linux/macOS: `scripts/render-status-line.sh`
+
+Deployed target paths:
+
+- `~/scripts/render-status-line.ps1`
+- `~/scripts/render-status-line.sh`
+
+Configured systems:
+
+- Claude: `.claude/settings.json` status line command enabled.
+- Gemini: `.gemini/settings.json` status line command configured.
+- OpenCode: `opencode.json` status line command configured.
+
+Rendered fields:
+
+- model/system name
+- active agent
+- active skill (if present in `coordination/state/<agent>.md`)
+- current step (from active checklist item)
+- checklist progress (`done/total`)
+- active task id
+- context usage percent (when runtime provides it)
+
+Example:
+
+```text
+Claude Sonnet | ag:codex | sk:- | step:Add shared cross-OS status… | chk:1/5 | task:T-20260301-cross-system… | ctx:37%
+```
+
+Note:
+- If repository context is not discoverable (no `coordination/tasks.jsonl`), status falls back to minimal values.
+
 ## Permissions Policy Enforcement
 
 Machine-readable profile:

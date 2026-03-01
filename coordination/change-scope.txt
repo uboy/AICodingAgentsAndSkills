@@ -1,42 +1,18 @@
-# Active scope for task: tier marker compatibility + multi-step change-control gate.
+# Active scope for task: cross-system status line deployment and action context.
 # Keep this file updated before non-trivial implementation.
 
-AGENTS.md
-AGENTS-hot.md
-AGENTS-warm.md
-AGENTS-cold.md
-AGENTS-hot-warm.md
-.gitignore
-scripts/extract-agents-tier.ps1
-scripts/extract-agents-tier.sh
-scripts/change-control-gate.ps1
-scripts/change-control-gate.sh
-scripts/security-review-gate.ps1
-scripts/security-review-gate.sh
-scripts/validate-review-report.ps1
-scripts/validate-review-report.sh
-scripts/validate-cycle-proof.ps1
-scripts/validate-cycle-proof.sh
-skills/agent-system-coach/SKILL.md
-evals/skills/cases/agent-system-coach.md
-commands/agent-system-coach.md
-.claude/agents/agent-system-coach.md
-skills/README.md
-AGENTS.md
-AGENTS-hot.md
-AGENTS-warm.md
-AGENTS-cold.md
-AGENTS-hot-warm.md
-coordination/cycle-contract.json
-coordination/templates/cycle-contract.json
-policy/source-of-truth-matrix.md
-policy/security-review-gate.md
+scripts/render-status-line.ps1
+scripts/render-status-line.sh
+scripts/validate-coordination.ps1
+.claude/settings.json
+.gemini/settings.json
+configs/codex/config.toml
+opencode.json
+deploy/manifest.txt
 README.md
-coordination/PLAN-TASK-PROTOCOL.md
-coordination/templates/change-scope.txt
-coordination/templates/review-report.md
-coordination/templates/approval-overrides.json
-coordination/approval-overrides.json
-coordination/reviews/*
-.gitignore
-.gitignore
+coordination/tasks.jsonl
+coordination/state/codex.md
+coordination/change-scope.txt
+coordination/cycle-contract.json
+coordination/reviews/T-20260301-cross-system-status-line.md
+coordination/handoffs/T-20260301-cross-system-status-line-codex.md

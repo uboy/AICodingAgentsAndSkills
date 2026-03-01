@@ -1,5 +1,5 @@
 {
-  "task_id": "T-20260301-paired-method-hardening",
+  "task_id": "T-20260301-cross-system-status-line",
   "implementation_agent": "codex",
   "review_agent": "code-review-qa",
   "required_commands": {
@@ -13,8 +13,8 @@
     ]
   },
   "required_artifacts": {
-    "review_report": "coordination/reviews/T-20260301-paired-method-hardening.md",
-    "handoff_report": "coordination/handoffs/T-20260301-paired-method-hardening-codex.md"
+    "review_report": "coordination/reviews/T-20260301-cross-system-status-line.md",
+    "handoff_report": "coordination/handoffs/T-20260301-cross-system-status-line-codex.md"
   },
   "limits": {
     "max_functional_files": 3,
