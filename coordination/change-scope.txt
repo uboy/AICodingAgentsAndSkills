@@ -15,6 +15,11 @@ scripts/security-review-gate.ps1
 scripts/security-review-gate.sh
 scripts/validate-review-report.ps1
 scripts/validate-review-report.sh
+skills/agent-system-coach/SKILL.md
+evals/skills/cases/agent-system-coach.md
+commands/agent-system-coach.md
+.claude/agents/agent-system-coach.md
+skills/README.md
 policy/security-review-gate.md
 README.md
 coordination/PLAN-TASK-PROTOCOL.md

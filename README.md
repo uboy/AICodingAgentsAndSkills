@@ -29,10 +29,12 @@ Single source of truth model:
 ## Text Agent And Skills
 
 - New Claude agent: `.claude/agents/text-editor.md`
+- Training helper agent: `.claude/agents/agent-system-coach.md`
 - Shared skills:
   - `skills/text-cleanup/SKILL.md`
   - `skills/lecture-transcript/SKILL.md`
   - `skills/meeting-notes/SKILL.md`
+  - `skills/agent-system-coach/SKILL.md`
 - Skill standards/template/guardrails:
   - `skills/QUALITY-STANDARD.md`
   - `skills/_template/SKILL.md`
