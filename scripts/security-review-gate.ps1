@@ -153,9 +153,10 @@ if ($shFiles.Count -gt 0) {
             $path = Join-Path $RepoRoot $rel
             $cmd = if ($bash -is [System.Management.Automation.CommandInfo]) { $bash.Source } else { $bash.FullName }
             $bashOutput = & $cmd -n $path 2>&1
-            if ($LASTEXITCODE -ne 0) {
+            $bashExitCode = $LASTEXITCODE
+            if ($bashExitCode -ne 0) {
                 $bashText = ($bashOutput | Out-String)
-                if ($bashText -match "couldn't create signal pipe|Win32 error 5|Access is denied") {
+                if ($bashText -match "couldn't create signal pipe|Win32 error 5|Access is denied" -or $bashExitCode -eq -1073741502) {
                     if (-not $bashEnvIssueReported) {
                         Add-Issue -Severity "WARN" -Check "bash-parse" -Detail "bash exists but cannot run in current runtime (permission/sandbox limitation); skipped .sh syntax checks."
                         $bashEnvIssueReported = $true

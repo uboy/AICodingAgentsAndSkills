@@ -1,0 +1,23 @@
+{
+  "task_id": "T-YYYYMMDD-example",
+  "implementation_agent": "implementation-developer",
+  "review_agent": "code-review-qa",
+  "required_commands": {
+    "windows": [
+      "pwsh -NoProfile -File .\\scripts\\change-control-gate.ps1",
+      "pwsh -NoProfile -File .\\scripts\\security-review-gate.ps1"
+    ],
+    "unix": [
+      "bash ./scripts/change-control-gate.sh",
+      "bash ./scripts/security-review-gate.sh"
+    ]
+  },
+  "required_artifacts": {
+    "review_report": "coordination/reviews/<task-id>.md",
+    "handoff_report": "coordination/handoffs/<task-id>-<agent>.md"
+  },
+  "limits": {
+    "max_functional_files": 3,
+    "max_diff_lines": 250
+  }
+}

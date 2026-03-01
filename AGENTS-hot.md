@@ -37,12 +37,12 @@
 
 18. Design-first workflow is mandatory for non-trivial tasks.
 - Before implementation/review with multiple steps/files, follow the **Feature Development Lifecycle**:
-  1. **Research**: Agent-Architect produces `.scratchpad/research.md` (deep exploration).
-  2. **Planning**: Agent-Architect produces `.scratchpad/plan.md` (design, constraints, steps).
-  3. **Annotation Cycle**: Mandatory pause for user feedback (CC/Change Control) on the plan.
-  4. **Todo List**: Lead-Dev-Planner creates a structured `checklist` in `tasks.jsonl`.
-  5. **Implement**: Implementation-Developer executes the checklist items one by one.
-  6. **Feedback & Iterate**: Code-Review-QA and the user finalize the task.
+  1. **Research**: Agent-Architect creates `.scratchpad/research.md`.
+  2. **Planning**: Agent-Architect creates `.scratchpad/plan.md`.
+  3. **Annotation Cycle**: pause for user feedback (CC) on the plan.
+  4. **Todo List**: Lead-Dev-Planner updates `tasks.jsonl`.
+  5. **Implement**: Implementation-Developer executes checklist items.
+  6. **Feedback & Iterate**: Code-Review-QA + user finalize.
 - **Stop and Re-plan**: if execution diverges from the plan or unexpected errors occur, the agent MUST stop and revise the design/plan before continuing.
 - Do not skip this workflow unless the user explicitly requests a tiny one-step change.
 
@@ -60,14 +60,14 @@
 - This rule governs the **top-level orchestrating agent** (the agent the user talks to directly — Codex, Claude Code, OpenCode, Gemini, Cursor).
 - **MANDATORY ROLE**: any agent receiving a request from the user MUST first act as the **Team Lead Orchestrator** (see `policy/team-lead-orchestrator.md`).
 - Before routing any task, classify it:
-  - **Trivial**: single-file isolated fix with exact user-specified change, documentation typo, running a user-specified command, clearly scoped tiny change with zero design decisions.
-  - **Non-trivial**: any new feature, any refactoring, any bug with unknown root cause, any change touching 3+ files, any API/interface/contract change, any security or performance change, any task requiring design decisions.
+  - **Trivial**: single-file exact change, doc typo, user-specified command, or tiny scoped change with zero design decisions.
+  - **Non-trivial**: new feature/refactor, unknown-root-cause bug, 3+ files, API/contract change, security/performance change, or design-heavy work.
 - **For trivial tasks**: may execute directly.
 - **For non-trivial tasks**: MUST follow the **6-Step Feature Development Lifecycle** (Rule 18). Do NOT invoke `implementation-developer` directly.
-  1. State to the user: "This is a non-trivial task — following the 6-step lifecycle per project policy."
-  2. Invoke **agent-architect** for **Research** and **Planning** → wait for `research.md` and `plan.md`.
-  3. Enter **Annotation Cycle** → wait for user feedback/CC on the plan.
-  4. Invoke **lead-dev-planner** for **Todo List** creation → wait for `tasks.jsonl` update.
+  1. Tell user: "This is a non-trivial task — following the 6-step lifecycle per project policy."
+  2. Invoke **agent-architect** for Research + Planning (`research.md`, `plan.md`).
+  3. Run **Annotation Cycle** and wait for user CC.
+  4. Invoke **lead-dev-planner** to create/update `tasks.jsonl`.
   5. Invoke **implementation-developer** for **Implement** phase.
   6. Invoke **code-review-qa** for **Feedback & Iterate** phase.
   7. After review approval, invoke **docs-writer**.
@@ -98,8 +98,3 @@
 - Completion is blocked unless cycle proof passes:
   - Windows 11: `scripts/validate-cycle-proof.ps1`
   - Linux/macOS: `scripts/validate-cycle-proof.sh`
-
-## Canonical Sources
-
-1. Single source of truth for policy and behavior: this file (`AGENTS.md`).
-2. System-specific files (`CLAUDE.md`, `.codex/AGENTS.md`, `CURSOR.md`, `GEMINI.md`, `OPENCODE.md`, `.gemini/*`, `.cursorrules`, `.cursor/rules/*`, `.config/opencode/*`) are thin adapters and must stay minimal.

@@ -92,3 +92,8 @@
 - `implementation-developer` MUST stop and ask for missing design details if `<feature>`/`vN` are not yet defined, rather than skipping the design doc update.
 - `code-review-qa` MUST fail review when functional files changed but any required document above is missing from the diff.
 - The final delivery summary MUST include a `Documentation Contract` section listing exact updated paths.
+
+## Canonical Sources
+
+1. Single source of truth for policy and behavior: this file (`AGENTS.md`).
+2. System-specific files (`CLAUDE.md`, `.codex/AGENTS.md`, `CURSOR.md`, `GEMINI.md`, `OPENCODE.md`, `.gemini/*`, `.cursorrules`, `.cursor/rules/*`, `.config/opencode/*`) are thin adapters and must stay minimal.
