@@ -1,7 +1,7 @@
 # extract-agents-tier.ps1 -- Generate tier files from AGENTS.md
 # Usage: .\scripts\extract-agents-tier.ps1 [-DryRun] [-Check]
 #
-# Reads AGENTS.md, splits sections by <!-- @tier:X --> markers, and writes:
+# Reads AGENTS.md, splits sections by <!-- tier:X --> (or legacy <!-- @tier:X -->) markers, and writes:
 #   AGENTS-hot.md        -- HOT tier only
 #   AGENTS-warm.md       -- WARM tier only
 #   AGENTS-cold.md       -- COLD tier only
@@ -37,7 +37,7 @@ $hotLines  = [System.Collections.Generic.List[string]]::new()
 $warmLines = [System.Collections.Generic.List[string]]::new()
 $coldLines = [System.Collections.Generic.List[string]]::new()
 $currentTier = ''
-$markerRx = [regex]'^\s*<!--\s*@tier:(hot|warm|cold)\s*-->\s*$'
+$markerRx = [regex]'^\s*<!--\s*@?tier:(hot|warm|cold)\s*-->\s*$'
 
 foreach ($line in [System.IO.File]::ReadLines($source)) {
     $m = $markerRx.Match($line)
@@ -93,7 +93,7 @@ foreach ($tier in @('hot', 'warm', 'cold')) {
         'cold' { $contentCold }
     }
     if ([string]::IsNullOrWhiteSpace($val)) {
-        Write-Host "ERROR: Tier '$tier' is empty - check @tier:$tier markers in AGENTS.md" -ForegroundColor Red
+        Write-Host "ERROR: Tier '$tier' is empty - check tier markers in AGENTS.md" -ForegroundColor Red
         $errCount++
     }
 }

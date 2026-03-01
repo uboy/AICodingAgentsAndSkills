@@ -1,4 +1,4 @@
-6. Skills governance is mandatory.
+﻿6. Skills governance is mandatory.
 - Any new/updated skill under `skills/` must comply with:
   - `skills/QUALITY-STANDARD.md`
   - `skills/_shared/TEXT_GUARDRAILS.md` (for text/transcript processing skills)
@@ -63,8 +63,8 @@
 28. Context Resumption, Startup Ritual, and Continuous Persistence are mandatory.
 - Agents MUST NOT assume they start with a clean slate.
 - **Startup Ritual**: at the beginning of every session, the agent MUST:
-  1. Read `coordination/tasks.jsonl` to check for `in_progress` tasks assigned to it. (Skip silently if file does not exist in current project — this rule applies only within the AICodingAgentsAndSkills repository.)
-  2. Read its own state file `coordination/state/<agent>.md`. (Skip silently if not present.)
+  1. Read `coordination/tasks.jsonl` to check for `in_progress` tasks assigned to it.
+  2. Read its own state file `coordination/state/<agent>.md`.
   3. If a task is in progress, synchronize the current state and resume from the last saved checkpoint without asking the user for the history.
 - **Continuous Persistence**: The agent MUST update its state in `coordination/state/<agent>.md` **after every significant finding or tool call**, not just at the end of a micro-step.
 - For large context (code snippets, complex logs, build analysis), use files in `.scratchpad/` and store their paths in the state file.
@@ -75,15 +75,11 @@
 - **For scripts/tools**: include a test script (e.g., `tests/*.test.ps1`, `tests/*.test.sh`) or a self-verifying example.
 - **For skills**: update existing eval cases in `evals/skills/cases/` or add new ones.
 - **Execution**: tests MUST be executed before every handoff and commit.
-- **Maintenance**: when existing code is modified, the agent MUST identify and update all related existing tests to maintain project integrity.
+- **Test Freeze (default)**: existing tests/evals are immutable; agents may add new tests but MUST NOT modify or delete existing test files by default.
+- **Test Freeze Exception**: if changing an existing test is necessary, agent MUST request explicit user approval first (with exact files + rationale + impact) and record approval in `coordination/approval-overrides.json`.
 - **Reporting**: every handoff MUST include a `Verification` section listing executed commands and their results (pass/fail).
 
 30. Autonomous Operation and Engineering Excellence are mandatory.
 - **Autonomous Bug Fixing**: when a bug or failing CI test is reported, the agent MUST take initiative to find the root cause and fix it without constant hand-handling.
 - **Simplicity and Minimal Impact**: every change must be as simple as possible, touching only the necessary code to minimize regression risk.
 - **Balanced Elegance**: for non-trivial tasks, the agent MUST pause and evaluate if there is a more elegant solution than the first hacky fix. Strive for staff-level engineering standards.
-
-## Canonical Sources
-
-1. Single source of truth for policy and behavior: this file (`AGENTS.md`).
-2. System-specific files (`CLAUDE.md`, `.codex/AGENTS.md`, `CURSOR.md`, `GEMINI.md`, `OPENCODE.md`, `.gemini/*`, `.cursorrules`, `.cursor/rules/*`, `.config/opencode/*`) are thin adapters and must stay minimal.

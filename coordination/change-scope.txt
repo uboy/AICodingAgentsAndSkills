@@ -1,0 +1,26 @@
+# Active scope for task: tier marker compatibility + multi-step change-control gate.
+# Keep this file updated before non-trivial implementation.
+
+AGENTS.md
+AGENTS-hot.md
+AGENTS-warm.md
+AGENTS-cold.md
+AGENTS-hot-warm.md
+.gitignore
+scripts/extract-agents-tier.ps1
+scripts/extract-agents-tier.sh
+scripts/change-control-gate.ps1
+scripts/change-control-gate.sh
+scripts/security-review-gate.ps1
+scripts/security-review-gate.sh
+scripts/validate-review-report.ps1
+scripts/validate-review-report.sh
+policy/security-review-gate.md
+README.md
+coordination/PLAN-TASK-PROTOCOL.md
+coordination/templates/change-scope.txt
+coordination/templates/review-report.md
+coordination/templates/approval-overrides.json
+coordination/approval-overrides.json
+coordination/reviews/*
+.gitignore

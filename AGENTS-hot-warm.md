@@ -1,4 +1,4 @@
-# PROJECT AGENTS POLICY & PROTOCOLS
+﻿# PROJECT AGENTS POLICY & PROTOCOLS
 
 **!!! CRITICAL BOOTSTRAP INSTRUCTION !!!**
 1. You are NOT allowed to perform any code changes or terminal commands until you have executed the **Startup Ritual** (Rule 28).
@@ -82,6 +82,19 @@
   - the expected impact on system state.
 - The agent MUST wait for explicit user confirmation (`PROCEED, OK, or YES`) before execution, even if tool permissions would otherwise allow it.
 - This rule applies to all models and systems (Claude, Codex, Cursor, Gemini, OpenCode).
+
+32. Existing architecture and review pipeline enforcement are mandatory.
+- **Architecture Freeze (default)**: agents MUST NOT modify existing architecture/design artifacts (`SPEC.md`, `ARCHITECTURE.md`, `docs/design/*`, `docs/architecture/*`) without explicit user approval.
+- **Architecture Exception**: when an architecture change is necessary, the agent MUST pause, ask permission with exact file-level diff intent and rationale, and record approval in `coordination/approval-overrides.json` before implementation.
+- **Post-Implementation Review Pipeline**: every functional change MUST produce a review report in `coordination/reviews/*.md` using `coordination/templates/review-report.md`.
+- **Gate Enforcement**: completion is blocked unless review reports pass:
+  - Windows 11: `scripts/validate-review-report.ps1`
+  - Linux/macOS: `scripts/validate-review-report.sh`
+
+## Canonical Sources
+
+1. Single source of truth for policy and behavior: this file (`AGENTS.md`).
+2. System-specific files (`CLAUDE.md`, `.codex/AGENTS.md`, `CURSOR.md`, `GEMINI.md`, `OPENCODE.md`, `.gemini/*`, `.cursorrules`, `.cursor/rules/*`, `.config/opencode/*`) are thin adapters and must stay minimal.
 
 ---
 

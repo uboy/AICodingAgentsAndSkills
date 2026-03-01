@@ -2,7 +2,7 @@
 # extract-agents-tier.sh — Generate tier files from AGENTS.md
 # Usage: bash scripts/extract-agents-tier.sh [--dry-run] [--check]
 #
-# Reads AGENTS.md, splits sections by <!-- @tier:X --> markers, and writes:
+# Reads AGENTS.md, splits sections by <!-- tier:X --> (or legacy <!-- @tier:X -->) markers, and writes:
 #   AGENTS-hot.md        — HOT tier only
 #   AGENTS-warm.md       — WARM tier only
 #   AGENTS-cold.md       — COLD tier only
@@ -44,7 +44,7 @@ current_tier=""
 
 while IFS= read -r line; do
   # Detect tier marker
-  if [[ "$line" =~ ^[[:space:]]*\<\!--[[:space:]]*@tier:(hot|warm|cold)[[:space:]]*--\>[[:space:]]*$ ]]; then
+  if [[ "$line" =~ ^[[:space:]]*\<\!--[[:space:]]*@?tier:(hot|warm|cold)[[:space:]]*--\>[[:space:]]*$ ]]; then
     current_tier="${BASH_REMATCH[1]}"
     continue  # don't emit the marker line itself
   fi
@@ -99,7 +99,7 @@ errors=0
 for tier_name in hot warm cold; do
   var="content_${tier_name}"
   if [[ -z "${!var}" ]]; then
-    echo "ERROR: Tier '$tier_name' is empty — check <!-- @tier:${tier_name} --> markers in AGENTS.md" >&2
+    echo "ERROR: Tier '$tier_name' is empty — check tier markers in AGENTS.md" >&2
     (( errors++ ))
   fi
 done

@@ -74,6 +74,39 @@ Checks for:
 - Required sections (`## Summary`, `## Files Touched`, `## Verification`, `## Commit Message`)
 - Non-empty/placeholder verification and commit blocks.
 
+Change-scope control (prevents unrelated edits in one task):
+
+- Scope template: `coordination/templates/change-scope.txt`
+- Active scope file: `coordination/change-scope.txt`
+- Windows 11: `scripts/change-control-gate.ps1`
+- Linux/macOS: `scripts/change-control-gate.sh`
+
+Run:
+
+```powershell
+pwsh -NoProfile -File .\scripts\change-control-gate.ps1
+```
+
+```bash
+bash ./scripts/change-control-gate.sh
+```
+
+Approval overrides (exception-only):
+
+- Template: `coordination/templates/approval-overrides.json`
+- Active file: `coordination/approval-overrides.json`
+- Intended only when user explicitly approved:
+  - modifying existing tests/evals
+  - changing established architecture/design docs
+
+Post-implementation review report:
+
+- Template: `coordination/templates/review-report.md`
+- Reports directory: `coordination/reviews/`
+- Validators:
+  - Windows 11: `scripts/validate-review-report.ps1`
+  - Linux/macOS: `scripts/validate-review-report.sh`
+
 ## Agent Memory and Knowledge Freshness
 
 Policy:

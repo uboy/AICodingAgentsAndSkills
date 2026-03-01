@@ -85,3 +85,5 @@ To ensure stability (Rule 29), agents MUST:
 4. **Cross-OS Validation**: scripts/automation changes must be verified on both Windows (PS1) and Linux/macOS (SH) where possible.
 5. **Balanced Elegance**: for non-trivial tasks, include a "Design Review" step to ensure the solution is elegant and simple.
 6. **Autonomous Ownership**: when a bug report or CI failure is the input, the agent takes full responsibility for investigation and fix.
+7. **Review Pipeline Artifact**: for functional changes, create `coordination/reviews/<task-id>-<agent>.md` using `coordination/templates/review-report.md`.
+8. **Review Validation**: ensure review reports pass `scripts/validate-review-report.ps1` (Windows) and `scripts/validate-review-report.sh` (Linux/macOS).

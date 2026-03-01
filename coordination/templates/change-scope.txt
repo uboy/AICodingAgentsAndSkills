@@ -1,0 +1,15 @@
+# Change Scope Template
+# One glob per line, repo-relative. Keep this list narrow.
+# Lines starting with # are ignored.
+#
+# Usage:
+# 1) Copy to coordination/change-scope.txt
+# 2) Keep only files/patterns expected for the task
+# 3) Run:
+#    - pwsh -NoProfile -File .\scripts\change-control-gate.ps1
+#    - bash ./scripts/change-control-gate.sh
+
+scripts/my-script.ps1
+scripts/my-script.sh
+README.md
+policy/some-policy.md

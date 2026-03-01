@@ -26,15 +26,21 @@ $headCheck = Git-Out -GitArgs @("rev-parse", "--verify", "HEAD")
 if ($headCheck.ExitCode -eq 0) {
     $diffA = Git-Out -GitArgs @("diff", "--name-only", "--diff-filter=ACMRTUXB", "HEAD")
     $diffB = Git-Out -GitArgs @("diff", "--cached", "--name-only", "--diff-filter=ACMRTUXB")
+    $diffC = Git-Out -GitArgs @("ls-files", "--others", "--exclude-standard")
 } else {
     $diffA = Git-Out -GitArgs @("ls-files", "--others", "--modified", "--exclude-standard")
     $diffB = Git-Out -GitArgs @("diff", "--cached", "--name-only", "--diff-filter=ACMRTUXB")
+    $diffC = [PSCustomObject]@{ ExitCode = 0; Lines = @() }
 }
 
 $changed = @(
-    $diffA.Lines + $diffB.Lines |
+    $diffA.Lines + $diffB.Lines + $diffC.Lines |
     ForEach-Object { "$_" } |
-    Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and -not $_.StartsWith("fatal:") } |
+    Where-Object {
+        -not [string]::IsNullOrWhiteSpace($_) -and
+        -not $_.StartsWith("fatal:") -and
+        -not $_.StartsWith("warning:")
+    } |
     Select-Object -Unique
 )
 
@@ -182,6 +188,18 @@ if (Test-Path -LiteralPath $integrityScript -PathType Leaf) {
     }
 } else {
     Add-Issue -Severity "FAIL" -Check "integrity-fast" -Detail "scripts/run-integrity-fast.ps1 not found."
+}
+
+$changeControlScript = Join-Path $RepoRoot "scripts/change-control-gate.ps1"
+if (Test-Path -LiteralPath $changeControlScript -PathType Leaf) {
+    & $changeControlScript -RepoRoot $RepoRoot
+    if ($LASTEXITCODE -ne 0) {
+        Add-Issue -Severity "FAIL" -Check "change-control" -Detail "change-control-gate.ps1 failed."
+    } else {
+        Add-Issue -Severity "PASS" -Check "change-control" -Detail "change-control-gate.ps1 passed."
+    }
+} else {
+    Add-Issue -Severity "FAIL" -Check "change-control" -Detail "scripts/change-control-gate.ps1 not found."
 }
 
 if ($issues.Count -eq 0) {

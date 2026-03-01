@@ -2,12 +2,13 @@
 
 - agent: `codex`
 - branch: `agent/codex`
-- task_id: `T-20260228-codex-cli-settings-hardening`
+- task_id: `T-20260301-tier-markers-and-change-control`
 - status: `done`
-- last_updated_utc: `2026-02-28T00:00:00Z`
+- last_updated_utc: `2026-03-01T00:00:00Z`
 - workspace: `.worktrees/codex`
 - notes:
-  - Root cause fixed: deploy manifest now manages Codex config.
-  - Added canonical deploy source: `configs/codex/config.toml` with `project_doc_max_bytes = 65536`.
-  - Updated README with Codex deployment/verification guidance.
-  - Validation passed (parity + security gate), with expected WARN for bash runtime in sandbox.
+  - Canonical tier markers normalized to safe `<!-- tier:* -->` syntax.
+  - Extractor scripts updated to parse both safe and legacy markers.
+  - New change-control gate added and integrated into security gate.
+  - Added review pipeline validation and strict freeze/override controls for existing tests and architecture files.
+  - Verification passed: extract tier check, parity, review validation, change-control gate, security-review gate.

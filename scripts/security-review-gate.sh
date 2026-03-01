@@ -41,8 +41,18 @@ mapfile -t changed < <(
   {
     git -C "$REPO_ROOT" diff --name-only --diff-filter=ACMRTUXB HEAD
     git -C "$REPO_ROOT" diff --cached --name-only --diff-filter=ACMRTUXB
+    git -C "$REPO_ROOT" ls-files --others --exclude-standard
   } | awk 'NF' | sort -u
 )
+
+filtered=()
+for rel in "${changed[@]}"; do
+  [[ -z "$rel" ]] && continue
+  [[ "$rel" == fatal:* ]] && continue
+  [[ "$rel" == warning:* ]] && continue
+  filtered+=("$rel")
+done
+changed=("${filtered[@]}")
 
 fail_count=0
 warn_count=0
@@ -157,6 +167,20 @@ if [[ -f "$REPO_ROOT/scripts/run-integrity-fast.sh" ]]; then
   fi
 else
   add_issue "WARN" "integrity-fast" "scripts/run-integrity-fast.sh not found."
+fi
+
+# Change-control gate (scope drift + docs/checklist/handoff contracts)
+if [[ -f "$REPO_ROOT/scripts/change-control-gate.sh" ]]; then
+  change_control_output="$(bash "$REPO_ROOT/scripts/change-control-gate.sh" 2>&1)" || {
+    echo "$change_control_output" >&2
+    add_issue "FAIL" "change-control" "change-control-gate.sh failed (see output above)."
+    change_control_output=""
+  }
+  if [[ -n "$change_control_output" ]]; then
+    add_issue "PASS" "change-control" "change-control-gate.sh passed."
+  fi
+else
+  add_issue "FAIL" "change-control" "scripts/change-control-gate.sh not found."
 fi
 
 if [[ ${#rows[@]} -eq 0 ]]; then
