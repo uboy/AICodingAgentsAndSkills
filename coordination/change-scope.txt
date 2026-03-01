@@ -4,6 +4,8 @@
 scripts/render-status-line.ps1
 scripts/render-status-line.sh
 scripts/validate-coordination.ps1
+scripts/change-control-gate.ps1
+scripts/change-control-gate.sh
 .claude/settings.json
 .gemini/settings.json
 configs/codex/config.toml
@@ -16,3 +18,5 @@ coordination/change-scope.txt
 coordination/cycle-contract.json
 coordination/reviews/T-20260301-cross-system-status-line.md
 coordination/handoffs/T-20260301-cross-system-status-line-codex.md
+coordination/reviews/T-20260301-commit-gate-stability.md
+coordination/handoffs/T-20260301-commit-gate-stability-codex.md

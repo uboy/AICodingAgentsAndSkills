@@ -1,0 +1,20 @@
+{
+  "id": "opencode-statusline-key-unsupported",
+  "technology": "opencode",
+  "skills": [
+    "agent-config",
+    "deployment"
+  ],
+  "applies_to_systems": [
+    "opencode"
+  ],
+  "summary": "OpenCode config schema rejects a top-level statusLine key; keep opencode.json limited to supported keys (schema, instructions, permission).",
+  "source_links": [
+    "user-runtime-error:2026-03-01"
+  ],
+  "recorded_on": "2026-03-01",
+  "last_verified_on": "2026-03-01",
+  "verify_after_days": 60,
+  "status": "active",
+  "trigger": "user_correction"
+}

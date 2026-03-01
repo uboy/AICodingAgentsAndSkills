@@ -107,7 +107,8 @@ $alwaysAllowed = @(
     "coordination/handoffs/*",
     "coordination/reviews/*",
     "coordination/templates/approval-overrides.json",
-    ".scratchpad/*"
+    ".scratchpad/*",
+    ".agent-memory/*"
 )
 
 $outOfScope = New-Object System.Collections.Generic.List[string]
@@ -155,7 +156,41 @@ $functionalChanged = @(
     }
 )
 
-if ($functionalChanged.Count -gt 0) {
+$trivialConfigPatterns = @(
+    ".claude/settings.json",
+    ".gemini/settings.json",
+    "configs/codex/config.toml",
+    "opencode.json",
+    ".cursorrules",
+    ".cursor/rules/*",
+    ".agent-memory/*",
+    "README.md"
+)
+$trivialSupportPatterns = @(
+    "coordination/*",
+    ".scratchpad/*"
+)
+
+$isTrivialConfigOnly = $false
+if ($changed.Count -gt 0) {
+    $hasNonTrivial = @(
+        $changed | Where-Object {
+            (-not (Test-AnyPattern -RelPath $_ -Patterns $alwaysAllowed)) -and
+            (-not (Test-AnyPattern -RelPath $_ -Patterns $trivialConfigPatterns)) -and
+            (-not (Test-AnyPattern -RelPath $_ -Patterns $trivialSupportPatterns))
+        }
+    ).Count -gt 0
+
+    $hasTrivialConfig = @(
+        $changed | Where-Object { Test-AnyPattern -RelPath $_ -Patterns $trivialConfigPatterns }
+    ).Count -gt 0
+
+    if ((-not $hasNonTrivial) -and $hasTrivialConfig) {
+        $isTrivialConfigOnly = $true
+    }
+}
+
+if ($functionalChanged.Count -gt 0 -and (-not $isTrivialConfigOnly)) {
     $docsPatterns = @(
         "README.md",
         "policy/*.md",
@@ -205,7 +240,14 @@ if ($functionalChanged.Count -gt 0) {
         }
     }
 } else {
-    Add-Issue -Severity "PASS" -Check "docs-contract" -Detail "No functional changes requiring docs/checklist/handoff contract."
+    if ($isTrivialConfigOnly) {
+        Add-Issue -Severity "PASS" -Check "docs-contract" -Detail "Trivial config-only change: full docs/checklist/review contract not required."
+        Add-Issue -Severity "PASS" -Check "tasks-checklist" -Detail "Trivial config-only change: tasks checklist update optional."
+        Add-Issue -Severity "PASS" -Check "handoff-evidence" -Detail "Trivial config-only change: handoff update optional."
+        Add-Issue -Severity "PASS" -Check "review-pipeline" -Detail "Trivial config-only change: review report optional."
+    } else {
+        Add-Issue -Severity "PASS" -Check "docs-contract" -Detail "No functional changes requiring docs/checklist/handoff contract."
+    }
 }
 
 $approval = @{

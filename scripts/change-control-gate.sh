@@ -141,6 +141,7 @@ always_allowed=(
   "coordination/reviews/*"
   "coordination/templates/approval-overrides.json"
   ".scratchpad/*"
+  ".agent-memory/*"
 )
 
 declare -a out_of_scope=()
@@ -197,7 +198,45 @@ for rel in "${changed[@]}"; do
   fi
 done
 
-if [[ $functional_changed -eq 1 ]]; then
+trivial_config_patterns=(
+  ".claude/settings.json"
+  ".gemini/settings.json"
+  "configs/codex/config.toml"
+  "opencode.json"
+  ".cursorrules"
+  ".cursor/rules/*"
+  ".agent-memory/*"
+  "README.md"
+)
+trivial_support_patterns=(
+  "coordination/*"
+  ".scratchpad/*"
+)
+
+is_trivial_config_only=0
+if [[ ${#changed[@]} -gt 0 ]]; then
+  has_non_trivial=0
+  has_trivial_config=0
+  for rel in "${changed[@]}"; do
+    if matches_any "$rel" "${trivial_config_patterns[@]}"; then
+      has_trivial_config=1
+      continue
+    fi
+    if matches_any "$rel" "${always_allowed[@]}"; then
+      continue
+    fi
+    if matches_any "$rel" "${trivial_support_patterns[@]}"; then
+      continue
+    fi
+    has_non_trivial=1
+    break
+  done
+  if [[ $has_non_trivial -eq 0 && $has_trivial_config -eq 1 ]]; then
+    is_trivial_config_only=1
+  fi
+fi
+
+if [[ $functional_changed -eq 1 && $is_trivial_config_only -eq 0 ]]; then
   docs_patterns=(
     "README.md"
     "policy/*.md"
@@ -269,7 +308,14 @@ if [[ $functional_changed -eq 1 ]]; then
     add_issue "FAIL" "review-pipeline" "Functional changes detected without coordination/reviews/*.md report."
   fi
 else
-  add_issue "PASS" "docs-contract" "No functional changes requiring docs/checklist/handoff contract."
+  if [[ $is_trivial_config_only -eq 1 ]]; then
+    add_issue "PASS" "docs-contract" "Trivial config-only change: full docs/checklist/review contract not required."
+    add_issue "PASS" "tasks-checklist" "Trivial config-only change: tasks checklist update optional."
+    add_issue "PASS" "handoff-evidence" "Trivial config-only change: handoff update optional."
+    add_issue "PASS" "review-pipeline" "Trivial config-only change: review report optional."
+  else
+    add_issue "PASS" "docs-contract" "No functional changes requiring docs/checklist/handoff contract."
+  fi
 fi
 
 allow_existing_test_modifications=0

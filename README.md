@@ -180,7 +180,7 @@ Configured systems:
 
 - Claude: `.claude/settings.json` status line command enabled.
 - Gemini: `.gemini/settings.json` status line command configured.
-- OpenCode: `opencode.json` status line command configured.
+- OpenCode: native `statusLine` key is not supported by schema; shared renderer remains available for manual use.
 
 Rendered fields:
 
