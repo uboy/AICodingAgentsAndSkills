@@ -183,6 +183,20 @@ else
   add_issue "FAIL" "change-control" "scripts/change-control-gate.sh not found."
 fi
 
+# Cycle proof gate (contracted commands, independent review, iteration size limits)
+if [[ -f "$REPO_ROOT/scripts/validate-cycle-proof.sh" ]]; then
+  cycle_output="$(bash "$REPO_ROOT/scripts/validate-cycle-proof.sh" 2>&1)" || {
+    echo "$cycle_output" >&2
+    add_issue "FAIL" "cycle-proof" "validate-cycle-proof.sh failed (see output above)."
+    cycle_output=""
+  }
+  if [[ -n "$cycle_output" ]]; then
+    add_issue "PASS" "cycle-proof" "validate-cycle-proof.sh passed."
+  fi
+else
+  add_issue "FAIL" "cycle-proof" "scripts/validate-cycle-proof.sh not found."
+fi
+
 if [[ ${#rows[@]} -eq 0 ]]; then
   add_issue "PASS" "gate" "No issues detected."
 fi

@@ -23,6 +23,7 @@
 
 ## Approval
 
+- Implementation Agent: <agent-name>
 - Reviewer: <name/agent>
 - Decision: <approved / changes_requested>
 - Notes: <brief rationale>

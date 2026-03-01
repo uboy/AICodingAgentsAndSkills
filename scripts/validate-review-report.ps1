@@ -60,6 +60,20 @@ foreach ($filePath in $files) {
             $failCount++
         }
     }
+
+    $implMatch = [regex]::Match($content, '(?im)^\s*-\s*Implementation Agent:\s*(.+)\s*$')
+    $reviewerMatch = [regex]::Match($content, '(?im)^\s*-\s*Reviewer:\s*(.+)\s*$')
+    if (-not $implMatch.Success -or -not $reviewerMatch.Success) {
+        Write-Error ("FAIL: {0} must include both '- Implementation Agent:' and '- Reviewer:' in ## Approval." -f $relPath)
+        $failCount++
+    } else {
+        $impl = $implMatch.Groups[1].Value.Trim()
+        $reviewer = $reviewerMatch.Groups[1].Value.Trim()
+        if ($impl.Equals($reviewer, [System.StringComparison]::OrdinalIgnoreCase)) {
+            Write-Error ("FAIL: {0} reviewer must differ from implementation agent." -f $relPath)
+            $failCount++
+        }
+    }
 }
 
 if ($failCount -gt 0) {

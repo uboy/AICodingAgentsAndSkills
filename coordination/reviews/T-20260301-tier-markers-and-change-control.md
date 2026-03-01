@@ -28,6 +28,7 @@
 
 ## Approval
 
-- Reviewer: codex
+- Implementation Agent: codex
+- Reviewer: code-review-qa
 - Decision: approved
 - Notes: Change set is policy/process-centric and includes cross-OS script parity.

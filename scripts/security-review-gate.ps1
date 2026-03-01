@@ -129,7 +129,7 @@ $coordinationChanged = @($changed | Where-Object { $_ -like "coordination/handof
 if ($coordinationChanged.Count -gt 0) {
     $validateCoordScript = Join-Path $RepoRoot "scripts/validate-coordination.ps1"
     if (Test-Path -LiteralPath $validateCoordScript -PathType Leaf) {
-        & pwsh -NoProfile -File $validateCoordScript -FilesToValidate $coordinationChanged
+        & pwsh -NoProfile -File $validateCoordScript -RepoRoot $RepoRoot -FilesToValidate @($coordinationChanged)
         if ($LASTEXITCODE -ne 0) {
             Add-Issue -Severity "FAIL" -Check "coordination-validate" -Detail "Coordination artifact validation failed."
         }
@@ -200,6 +200,18 @@ if (Test-Path -LiteralPath $changeControlScript -PathType Leaf) {
     }
 } else {
     Add-Issue -Severity "FAIL" -Check "change-control" -Detail "scripts/change-control-gate.ps1 not found."
+}
+
+$cycleProofScript = Join-Path $RepoRoot "scripts/validate-cycle-proof.ps1"
+if (Test-Path -LiteralPath $cycleProofScript -PathType Leaf) {
+    & $cycleProofScript -RepoRoot $RepoRoot
+    if ($LASTEXITCODE -ne 0) {
+        Add-Issue -Severity "FAIL" -Check "cycle-proof" -Detail "validate-cycle-proof.ps1 failed."
+    } else {
+        Add-Issue -Severity "PASS" -Check "cycle-proof" -Detail "validate-cycle-proof.ps1 passed."
+    }
+} else {
+    Add-Issue -Severity "FAIL" -Check "cycle-proof" -Detail "scripts/validate-cycle-proof.ps1 not found."
 }
 
 if ($issues.Count -eq 0) {

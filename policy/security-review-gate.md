@@ -40,6 +40,14 @@ bash ./scripts/security-review-gate.sh
 - requires post-implementation review report (`coordination/reviews/*.md`) validated by:
   - `scripts/validate-review-report.ps1` (Windows)
   - `scripts/validate-review-report.sh` (Linux/macOS)
+7. Cycle-proof gate:
+- `scripts/validate-cycle-proof.ps1` (Windows)
+- `scripts/validate-cycle-proof.sh` (Linux/macOS)
+- enforces `coordination/cycle-contract.json`
+- checks required review/handoff artifacts
+- checks independent review (`Reviewer` must differ from `Implementation Agent`)
+- checks required verification commands are present in the review report
+- checks iteration-size limits (`max_functional_files`, `max_diff_lines`) with explicit override only
 
 ## Cross-System Coverage
 

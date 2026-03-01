@@ -52,6 +52,7 @@ For non-trivial tasks (multiple files/steps), checklist tracking is mandatory:
 2. Keep exactly one item in `in_progress` at a time.
 3. Mark incomplete items as `blocked` with reason if task cannot proceed.
 4. Ensure verification/doc/security-gate items are present and completed before handoff.
+5. Define or update `coordination/cycle-contract.json` before implementation.
 
 ## Micro-Step Execution for Weak Models
 
@@ -87,3 +88,4 @@ To ensure stability (Rule 29), agents MUST:
 6. **Autonomous Ownership**: when a bug report or CI failure is the input, the agent takes full responsibility for investigation and fix.
 7. **Review Pipeline Artifact**: for functional changes, create `coordination/reviews/<task-id>-<agent>.md` using `coordination/templates/review-report.md`.
 8. **Review Validation**: ensure review reports pass `scripts/validate-review-report.ps1` (Windows) and `scripts/validate-review-report.sh` (Linux/macOS).
+9. **Cycle-Proof Validation**: ensure cycle contract checks pass via `scripts/validate-cycle-proof.ps1` (Windows) and `scripts/validate-cycle-proof.sh` (Linux/macOS).

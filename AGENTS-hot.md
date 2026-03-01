@@ -91,6 +91,14 @@
   - Windows 11: `scripts/validate-review-report.ps1`
   - Linux/macOS: `scripts/validate-review-report.sh`
 
+33. Contracted iteration cycle proof is mandatory for non-trivial tasks.
+- Before implementation, define/update `coordination/cycle-contract.json` (`task_id`, implementation/review agents, required commands, required artifacts, size limits).
+- Review must be independent: `Reviewer` must differ from `Implementation Agent`.
+- Size limits block by default; exceptions require explicit `coordination/approval-overrides.json` approval.
+- Completion is blocked unless cycle proof passes:
+  - Windows 11: `scripts/validate-cycle-proof.ps1`
+  - Linux/macOS: `scripts/validate-cycle-proof.sh`
+
 ## Canonical Sources
 
 1. Single source of truth for policy and behavior: this file (`AGENTS.md`).

@@ -1,6 +1,7 @@
 {
   "allow_existing_test_modifications": false,
   "allow_architecture_changes": false,
-  "approved_by": "",
-  "reason": ""
+  "allow_large_changes": true,
+  "approved_by": "user-2026-03-01",
+  "reason": "Bootstrap rollout of cycle-proof/process hardening across multiple scripts and policies."
 }

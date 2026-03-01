@@ -109,6 +109,20 @@ Post-implementation review report:
   - Windows 11: `scripts/validate-review-report.ps1`
   - Linux/macOS: `scripts/validate-review-report.sh`
 
+Cycle contract (required for non-trivial implementation cycles):
+
+- Template: `coordination/templates/cycle-contract.json`
+- Active file: `coordination/cycle-contract.json`
+- Validators:
+  - Windows 11: `scripts/validate-cycle-proof.ps1`
+  - Linux/macOS: `scripts/validate-cycle-proof.sh`
+
+Cycle-proof checks:
+- required review/handoff artifacts exist
+- reviewer is independent from implementation agent
+- required verification commands are present in review report
+- iteration size stays within contract limits (unless explicitly overridden)
+
 ## Agent Memory and Knowledge Freshness
 
 Policy:

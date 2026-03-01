@@ -15,11 +15,21 @@ scripts/security-review-gate.ps1
 scripts/security-review-gate.sh
 scripts/validate-review-report.ps1
 scripts/validate-review-report.sh
+scripts/validate-cycle-proof.ps1
+scripts/validate-cycle-proof.sh
 skills/agent-system-coach/SKILL.md
 evals/skills/cases/agent-system-coach.md
 commands/agent-system-coach.md
 .claude/agents/agent-system-coach.md
 skills/README.md
+AGENTS.md
+AGENTS-hot.md
+AGENTS-warm.md
+AGENTS-cold.md
+AGENTS-hot-warm.md
+coordination/cycle-contract.json
+coordination/templates/cycle-contract.json
+policy/source-of-truth-matrix.md
 policy/security-review-gate.md
 README.md
 coordination/PLAN-TASK-PROTOCOL.md
@@ -28,4 +38,5 @@ coordination/templates/review-report.md
 coordination/templates/approval-overrides.json
 coordination/approval-overrides.json
 coordination/reviews/*
+.gitignore
 .gitignore

@@ -45,6 +45,16 @@ run_shell_fallback() {
         fail_count=$((fail_count + 1))
       fi
     done
+
+    impl="$(sed -n 's/^[[:space:]]*-[[:space:]]*Implementation Agent:[[:space:]]*\(.*\)$/\1/p' "$path" | head -n 1)"
+    reviewer="$(sed -n 's/^[[:space:]]*-[[:space:]]*Reviewer:[[:space:]]*\(.*\)$/\1/p' "$path" | head -n 1)"
+    if [[ -z "$impl" || -z "$reviewer" ]]; then
+      echo "FAIL: $rel must include both '- Implementation Agent:' and '- Reviewer:' in ## Approval."
+      fail_count=$((fail_count + 1))
+    elif [[ "$(printf '%s' "$impl" | tr '[:upper:]' '[:lower:]')" == "$(printf '%s' "$reviewer" | tr '[:upper:]' '[:lower:]')" ]]; then
+      echo "FAIL: $rel reviewer must differ from implementation agent."
+      fail_count=$((fail_count + 1))
+    fi
   done
 
   if [[ $fail_count -gt 0 ]]; then
@@ -110,6 +120,18 @@ for path in files:
         body = m.group(1).strip()
         if (not body) or re.search(r"\b(todo|tbd|<placeholder>)\b", body, flags=re.IGNORECASE):
             print("FAIL: {} has empty or placeholder ## {}".format(rel, section))
+            fail_count += 1
+
+    impl_match = re.search(r"(?im)^\s*-\s*Implementation Agent:\s*(.+)\s*$", content)
+    reviewer_match = re.search(r"(?im)^\s*-\s*Reviewer:\s*(.+)\s*$", content)
+    if not impl_match or not reviewer_match:
+        print("FAIL: {} must include both '- Implementation Agent:' and '- Reviewer:' in ## Approval.".format(rel))
+        fail_count += 1
+    else:
+        impl = impl_match.group(1).strip().lower()
+        reviewer = reviewer_match.group(1).strip().lower()
+        if impl == reviewer:
+            print("FAIL: {} reviewer must differ from implementation agent.".format(rel))
             fail_count += 1
 
 if fail_count > 0:

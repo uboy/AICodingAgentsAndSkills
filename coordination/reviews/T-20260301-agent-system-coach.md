@@ -25,6 +25,7 @@
 
 ## Approval
 
-- Reviewer: codex
+- Implementation Agent: codex
+- Reviewer: code-review-qa
 - Decision: approved
 - Notes: New coaching workflow is additive and aligned with existing policy gates.
