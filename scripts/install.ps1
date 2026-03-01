@@ -1,5 +1,6 @@
 param(
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path,
+    [string]$HomeDir = "",
     [ValidateSet("ask", "replace", "merge", "keep")]
     [string]$ConflictAction = "ask",
     [string[]]$Category = @(),
@@ -12,10 +13,40 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$HomeDir = [Environment]::GetFolderPath("UserProfile")
 $ManifestPath = Join-Path $RepoRoot "deploy/manifest.txt"
 $TimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $BackupScriptPath = Join-Path $PSScriptRoot "backup-user-config.ps1"
+
+function Resolve-HomeDir([string]$OverrideHome) {
+    if (-not [string]::IsNullOrWhiteSpace($OverrideHome)) {
+        return $OverrideHome
+    }
+
+    $candidates = @()
+    if (-not [string]::IsNullOrWhiteSpace($env:HOME)) {
+        $candidates += $env:HOME
+    }
+    if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
+        $candidates += $env:USERPROFILE
+    }
+    $profileHome = [Environment]::GetFolderPath("UserProfile")
+    if (-not [string]::IsNullOrWhiteSpace($profileHome)) {
+        $candidates += $profileHome
+    }
+
+    foreach ($candidate in $candidates) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) {
+            continue
+        }
+        if (Test-Path -LiteralPath $candidate -PathType Container) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+
+    throw "Unable to resolve home directory. Pass -HomeDir explicitly."
+}
+
+$HomeDir = Resolve-HomeDir -OverrideHome $HomeDir
 
 function Write-Step([string]$Message) {
     Write-Host "[*] $Message"
@@ -325,9 +356,9 @@ function Invoke-AutoBackup {
 
     Write-Step "Creating automatic pre-install backup"
     if ($DryRun) {
-        & $BackupScriptPath -RepoRoot $RepoRoot -BackupName "install-$TimeStamp" -DryRun
+        & $BackupScriptPath -RepoRoot $RepoRoot -HomeDir $HomeDir -BackupName "install-$TimeStamp" -DryRun
     } else {
-        & $BackupScriptPath -RepoRoot $RepoRoot -BackupName "install-$TimeStamp"
+        & $BackupScriptPath -RepoRoot $RepoRoot -HomeDir $HomeDir -BackupName "install-$TimeStamp"
     }
 }
 
@@ -342,7 +373,7 @@ Write-Step "Checking dependencies"
 $gitOk = Ensure-Dependency -CommandName "git" -WingetId "Git.Git"
 [void](Ensure-Dependency -CommandName "gitleaks" -WingetId "Gitleaks.Gitleaks")
 
-$entries = Parse-Manifest -Path $ManifestPath
+$entries = @(Parse-Manifest -Path $ManifestPath)
 Write-Step "Manifest entries: $($entries.Count)"
 
 foreach ($entry in $entries) {

@@ -2,11 +2,43 @@ param(
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path,
     [string]$ProfileFile = "",
     [string]$ProfileName = "default",
+    [string]$HomeDir = "",
     [switch]$Apply
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+function Resolve-HomeDir([string]$OverrideHome) {
+    if (-not [string]::IsNullOrWhiteSpace($OverrideHome)) {
+        return $OverrideHome
+    }
+
+    $candidates = @()
+    if (-not [string]::IsNullOrWhiteSpace($env:HOME)) {
+        $candidates += $env:HOME
+    }
+    if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
+        $candidates += $env:USERPROFILE
+    }
+    $profileHome = [Environment]::GetFolderPath("UserProfile")
+    if (-not [string]::IsNullOrWhiteSpace($profileHome)) {
+        $candidates += $profileHome
+    }
+
+    foreach ($candidate in $candidates) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) {
+            continue
+        }
+        if (Test-Path -LiteralPath $candidate -PathType Container) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+
+    throw "Unable to resolve home directory. Pass -HomeDir explicitly."
+}
+
+$HomeDir = Resolve-HomeDir -OverrideHome $HomeDir
 
 if ([string]::IsNullOrWhiteSpace($ProfileFile)) {
     $ProfileFile = Join-Path $RepoRoot "policy/tool-permissions-profiles.json"
@@ -195,7 +227,7 @@ function Audit-OpenCode([string]$path, [string]$label) {
 }
 
 Audit-OpenCode -path (Join-Path $RepoRoot "opencode.json") -label "opencode.json"
-$userOpenCode = Join-Path ([Environment]::GetFolderPath("UserProfile")) ".config/opencode/opencode.json"
+$userOpenCode = Join-Path $HomeDir ".config/opencode/opencode.json"
 Audit-OpenCode -path $userOpenCode -label "~/.config/opencode/opencode.json"
 
 Write-Host ""

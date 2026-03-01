@@ -102,6 +102,19 @@ Current baseline:
 - `sandbox_mode = "workspace-write"`
 - `project_doc_max_bytes = 65536` (prevents AGENTS loading truncation in layered policy setups)
 
+## Gemini Runtime Hardening
+
+Gemini context entrypoint is intentionally constrained to:
+- `.gemini/settings.json` -> `"context.fileName": ["GEMINI.md"]`
+
+Why:
+- avoids loading multiple `AGENTS.md` files from parent directories with conflicting precedence
+- makes `GEMINI.md` the single deterministic adapter entrypoint
+
+Adapter behavior:
+- project root `GEMINI.md` imports canonical project policy files
+- `.gemini/GEMINI.md` uses parent-relative imports (`@../AGENTS-hot.md`, `@../AGENTS-warm.md`) so it resolves both in-repo and after deploy to `~/.gemini`
+
 ## Permissions Policy Enforcement
 
 Machine-readable profile:
@@ -329,6 +342,10 @@ Windows:
 pwsh -NoProfile -File .\scripts\backup-user-config.ps1
 ```
 
+```powershell
+pwsh -NoProfile -File .\scripts\backup-user-config.ps1 -HomeDir C:\Users\<user>
+```
+
 Linux/macOS:
 
 ```bash
@@ -379,11 +396,16 @@ bash ./scripts/install.sh
 - `--dry-run` / `-DryRun`
 - `--non-interactive` / `-NonInteractive`
 - `--no-deps` / `-NoDeps`
+- `-HomeDir <path>` (forces target user-home path for deploy/backup/audit flows)
 
 Examples:
 
 ```powershell
 pwsh -NoProfile -File .\scripts\install.ps1 -DryRun -NonInteractive -NoDeps -ConflictAction keep
+```
+
+```powershell
+pwsh -NoProfile -File .\scripts\install.ps1 -HomeDir C:\Users\<user> -DryRun -NonInteractive -NoDeps -ConflictAction keep
 ```
 
 ```bash
@@ -398,6 +420,10 @@ Audit scripts compare what is installed in user home with repository sources fro
 
 ```powershell
 pwsh -NoProfile -File .\scripts\audit-installed-config.ps1
+```
+
+```powershell
+pwsh -NoProfile -File .\scripts\audit-installed-config.ps1 -HomeDir C:\Users\<user>
 ```
 
 ### Linux / macOS

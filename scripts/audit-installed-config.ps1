@@ -1,12 +1,43 @@
 param(
-    [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+    [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path,
+    [string]$HomeDir = ""
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$HomeDir = [Environment]::GetFolderPath("UserProfile")
 $ManifestPath = Join-Path $RepoRoot "deploy/manifest.txt"
+
+function Resolve-HomeDir([string]$OverrideHome) {
+    if (-not [string]::IsNullOrWhiteSpace($OverrideHome)) {
+        return $OverrideHome
+    }
+
+    $candidates = @()
+    if (-not [string]::IsNullOrWhiteSpace($env:HOME)) {
+        $candidates += $env:HOME
+    }
+    if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
+        $candidates += $env:USERPROFILE
+    }
+    $profileHome = [Environment]::GetFolderPath("UserProfile")
+    if (-not [string]::IsNullOrWhiteSpace($profileHome)) {
+        $candidates += $profileHome
+    }
+
+    foreach ($candidate in $candidates) {
+        if ([string]::IsNullOrWhiteSpace($candidate)) {
+            continue
+        }
+        if (Test-Path -LiteralPath $candidate -PathType Container) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+
+    throw "Unable to resolve home directory. Pass -HomeDir explicitly."
+}
+
+$HomeDir = Resolve-HomeDir -OverrideHome $HomeDir
 
 function Parse-Manifest([string]$Path) {
     $items = @()
