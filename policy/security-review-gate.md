@@ -34,6 +34,9 @@ bash ./scripts/security-review-gate.sh
 - blocks out-of-scope file changes based on `coordination/change-scope.txt`
 - requires checklist/handoff evidence for functional changes (`coordination/tasks.jsonl`, `coordination/handoffs/*.md`)
 - requires docs/policy evidence for functional changes (`README.md` or `policy/*.md`/equivalent docs)
+- **significant logic documentation contract**:
+  - if changes affect requirements/behavior/capabilities enforcement logic (for example gate scripts, validators, install/deploy core, policy profiles/rules), `README.md` update is mandatory in the same change set
+  - gate check: `significant-doc-sync`
 - blocks modification of existing tests/evals by default (new tests allowed)
 - blocks architecture/design file changes by default (`SPEC.md`, `ARCHITECTURE.md`, `docs/design/*`, `docs/architecture/*`)
 - allows exceptions only with explicit override record: `coordination/approval-overrides.json`

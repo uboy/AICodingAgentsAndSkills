@@ -239,6 +239,34 @@ if ($functionalChanged.Count -gt 0 -and (-not $isTrivialConfigOnly)) {
             Add-Issue -Severity "FAIL" -Check "review-pipeline" -Detail "scripts/validate-review-report.ps1 not found."
         }
     }
+
+    $significantLogicPatterns = @(
+        "scripts/change-control-gate.*",
+        "scripts/security-review-gate.*",
+        "scripts/validate-*.ps1",
+        "scripts/validate-*.sh",
+        "scripts/install.*",
+        "scripts/run-integrity-fast.*",
+        "policy/*.md",
+        "policy/*.json",
+        "AGENTS*.md",
+        "configs/codex/config.toml",
+        "deploy/manifest.txt"
+    )
+    $hasSignificantLogicChange = @(
+        $changed | Where-Object { Test-AnyPattern -RelPath $_ -Patterns $significantLogicPatterns }
+    ).Count -gt 0
+    $hasReadmeUpdate = $changed -contains "README.md"
+
+    if ($hasSignificantLogicChange) {
+        if ($hasReadmeUpdate) {
+            Add-Issue -Severity "PASS" -Check "significant-doc-sync" -Detail "Significant logic change includes README.md update."
+        } else {
+            Add-Issue -Severity "FAIL" -Check "significant-doc-sync" -Detail "Significant logic change requires README.md update (requirements/behavior/capabilities documentation)."
+        }
+    } else {
+        Add-Issue -Severity "PASS" -Check "significant-doc-sync" -Detail "No significant logic changes requiring mandatory README sync."
+    }
 } else {
     if ($isTrivialConfigOnly) {
         Add-Issue -Severity "PASS" -Check "docs-contract" -Detail "Trivial config-only change: full docs/checklist/review contract not required."

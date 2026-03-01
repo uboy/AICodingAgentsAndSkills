@@ -73,7 +73,7 @@ Validation for handoffs and state files (Rule 17, 21, 29):
 - Linux/macOS: `scripts/validate-coordination.sh`
 
 Checks for:
-- Required sections (`## Summary`, `## Files Touched`, `## Verification`, `## Commit Message`)
+- Required sections (`## Summary`, `## Files Touched`, `## Verification`, and `## Delivery Contract` or `## Commit Message`)
 - Non-empty/placeholder verification and commit blocks.
 
 Change-scope control (prevents unrelated edits in one task):
@@ -82,6 +82,11 @@ Change-scope control (prevents unrelated edits in one task):
 - Active scope file: `coordination/change-scope.txt`
 - Windows 11: `scripts/change-control-gate.ps1`
 - Linux/macOS: `scripts/change-control-gate.sh`
+
+Additional gate behavior:
+- Trivial config-only changes (for example `opencode.json`, `.claude/settings.json`, `.gemini/settings.json`, `configs/codex/config.toml`, `README.md`, and `.agent-memory/*`) use a fast-path and do not require full review/checklist artifacts for every tiny fix.
+- `.agent-memory/*` is treated as allowed support metadata for correction-loop updates.
+- Significant logic changes (requirements/behavior/capabilities enforcement) must update `README.md` in the same change set (`significant-doc-sync` gate check).
 
 Run:
 

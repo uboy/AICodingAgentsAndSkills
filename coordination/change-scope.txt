@@ -6,6 +6,7 @@ scripts/render-status-line.sh
 scripts/validate-coordination.ps1
 scripts/change-control-gate.ps1
 scripts/change-control-gate.sh
+policy/security-review-gate.md
 .claude/settings.json
 .gemini/settings.json
 configs/codex/config.toml

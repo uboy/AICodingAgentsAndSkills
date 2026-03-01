@@ -307,6 +307,39 @@ if [[ $functional_changed -eq 1 && $is_trivial_config_only -eq 0 ]]; then
   else
     add_issue "FAIL" "review-pipeline" "Functional changes detected without coordination/reviews/*.md report."
   fi
+
+  significant_logic_patterns=(
+    "scripts/change-control-gate.*"
+    "scripts/security-review-gate.*"
+    "scripts/validate-*.ps1"
+    "scripts/validate-*.sh"
+    "scripts/install.*"
+    "scripts/run-integrity-fast.*"
+    "policy/*.md"
+    "policy/*.json"
+    "AGENTS*.md"
+    "configs/codex/config.toml"
+    "deploy/manifest.txt"
+  )
+  has_significant_logic_change=0
+  has_readme_update=0
+  for rel in "${changed[@]}"; do
+    if matches_any "$rel" "${significant_logic_patterns[@]}"; then
+      has_significant_logic_change=1
+    fi
+    if [[ "$rel" == "README.md" ]]; then
+      has_readme_update=1
+    fi
+  done
+  if [[ $has_significant_logic_change -eq 1 ]]; then
+    if [[ $has_readme_update -eq 1 ]]; then
+      add_issue "PASS" "significant-doc-sync" "Significant logic change includes README.md update."
+    else
+      add_issue "FAIL" "significant-doc-sync" "Significant logic change requires README.md update (requirements/behavior/capabilities documentation)."
+    fi
+  else
+    add_issue "PASS" "significant-doc-sync" "No significant logic changes requiring mandatory README sync."
+  fi
 else
   if [[ $is_trivial_config_only -eq 1 ]]; then
     add_issue "PASS" "docs-contract" "Trivial config-only change: full docs/checklist/review contract not required."
