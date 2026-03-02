@@ -26,6 +26,46 @@ Single source of truth model:
 - canonical cross-system policy: `AGENTS.md`
 - system-specific files (`CLAUDE.md`, `.codex/AGENTS.md`, `CURSOR.md`, `GEMINI.md`, `OPENCODE.md`, `.cursorrules`, `.gemini/*`, `.cursor/rules/*`, `.config/opencode/*`) are thin adapters to canonical files
 
+## Cross-System Policy Sync
+
+Policy changes flow automatically through the pipeline:
+
+```
+AGENTS.md → extract-agents-tier.sh → AGENTS-hot/warm/cold.md
+                                            ↓
+                                    sync-adapters.sh (auto-called)
+                                            ↓
+                          .codex/AGENTS.md + .cursor/rules/*.mdc
+```
+
+After modifying `AGENTS.md`, run:
+- Windows: `scripts/extract-agents-tier.ps1` (regenerates tiers + adapters)
+- Linux/macOS: `bash scripts/extract-agents-tier.sh` (regenerates tiers + adapters)
+
+Adapter sync validation (runs automatically in pre-commit):
+- Windows: `scripts/sync-adapters.ps1 --check`
+- Linux/macOS: `bash scripts/sync-adapters.sh --check`
+
+## Claude Code Policy Bootstrap
+
+Claude Code injects `AGENTS-hot.md` at every session start via a `SessionStart` hook:
+
+- Hook script: `.claude/hooks/inject-agents-policy.sh` (bash) / `.claude/hooks/inject-agents-policy.ps1` (PowerShell)
+- Config: `.claude/settings.json` → `hooks.SessionStart`
+- The hook reads `AGENTS-hot.md` from the project directory (or `~/AGENTS-hot.md` as fallback) and returns it as `additionalContext`
+- This is functionally equivalent to Gemini's `@./AGENTS-hot.md` directive
+
+To deploy the hook to user scope after install:
+```bash
+bash scripts/install.sh --category agents
+```
+
+## Status Line
+
+Status line is configured for Claude Code and Gemini. Renderer: `scripts/render-status-line.sh` / `scripts/render-status-line.ps1`.
+
+Python detection uses functional test (`python3 -c "import sys"`) rather than path check (`command -v python3`) to avoid the Windows Store stub issue.
+
 ## Text Agent And Skills
 
 - New Claude agent: `.claude/agents/text-editor.md`

@@ -155,4 +155,12 @@ if (-not $DryRun -and -not $Check) {
     Write-Host "  AGENTS-warm.md     ~$warmTok tok"
     Write-Host "  AGENTS-cold.md     ~$coldTok tok"
     Write-Host "  AGENTS-hot-warm.md ~$hotwarmTok tok"
+
+    # Auto-sync adapter files (mirrors extract-agents-tier.sh behaviour — AGENTS.md Rule 1)
+    $SyncScript = Join-Path $RepoRoot "scripts/sync-adapters.ps1"
+    if (Test-Path $SyncScript) {
+        Write-Host ""
+        Write-Host "Running sync-adapters.ps1 to update adapter files..."
+        & pwsh -File $SyncScript
+    }
 }

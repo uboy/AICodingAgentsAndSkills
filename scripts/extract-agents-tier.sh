@@ -154,4 +154,12 @@ if [[ $DRY_RUN -eq 0 && $CHECK_MODE -eq 0 ]]; then
   echo "  AGENTS-warm.md     ~$(( ${#content_warm}    / 4 )) tok"
   echo "  AGENTS-cold.md     ~$(( ${#content_cold}    / 4 )) tok"
   echo "  AGENTS-hot-warm.md ~$(( ${#content_hotwarm} / 4 )) tok"
+
+  # Sync adapter files to reflect the freshly generated tier content
+  SYNC_SCRIPT="$REPO_ROOT/scripts/sync-adapters.sh"
+  if [[ -f "$SYNC_SCRIPT" ]]; then
+    echo ""
+    echo "Syncing adapters..."
+    bash "$SYNC_SCRIPT"
+  fi
 fi

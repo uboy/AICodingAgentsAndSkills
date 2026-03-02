@@ -1,4 +1,4 @@
-﻿## 1. Cross-OS support is required by default.
+## 1. Cross-OS support is required by default.
 - Any new automation script must include:
   - Windows 11 support via PowerShell (`*.ps1`)
   - Linux support via shell (`*.sh`)

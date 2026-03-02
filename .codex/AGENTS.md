@@ -6,7 +6,7 @@
 **!!! CRITICAL BOOTSTRAP INSTRUCTION !!!**
 1. You are NOT allowed to perform any code changes or terminal commands until you have executed the **Startup Ritual** (Rule 28).
 2. You MUST immediately classify every request as **Trivial** or **Non-trivial** (Rule 21).
-3. For Non-trivial tasks, you MUST invoke the **Team Lead Orchestrator** role (`policy/team-lead-orchestrator.md` — if not in project root, use `~/policy/team-lead-orchestrator.md`) and stop.
+3. For Non-trivial tasks, you MUST invoke the **Team Lead Orchestrator** role (`policy/team-lead-orchestrator.md`) and stop.
 4. If you are the first agent in the session, you ARE the Team Lead.
 
 ---
@@ -40,12 +40,12 @@
 
 18. Design-first workflow is mandatory for non-trivial tasks.
 - Before implementation/review with multiple steps/files, follow the **Feature Development Lifecycle**:
-  1. **Research**: Agent-Architect produces `.scratchpad/research.md` (deep exploration).
-  2. **Planning**: Agent-Architect produces `.scratchpad/plan.md` (design, constraints, steps).
-  3. **Annotation Cycle**: Mandatory pause for user feedback (CC/Change Control) on the plan.
-  4. **Todo List**: Lead-Dev-Planner creates a structured `checklist` in `tasks.jsonl`.
-  5. **Implement**: Implementation-Developer executes the checklist items one by one.
-  6. **Feedback & Iterate**: Code-Review-QA and the user finalize the task.
+  1. **Research**: Agent-Architect creates `.scratchpad/research.md`.
+  2. **Planning**: Agent-Architect creates `.scratchpad/plan.md`.
+  3. **Annotation Cycle**: pause for user feedback (CC) on the plan.
+  4. **Todo List**: Lead-Dev-Planner updates `tasks.jsonl`.
+  5. **Implement**: Implementation-Developer executes checklist items.
+  6. **Feedback & Iterate**: Code-Review-QA + user finalize.
 - **Stop and Re-plan**: if execution diverges from the plan or unexpected errors occur, the agent MUST stop and revise the design/plan before continuing.
 - Do not skip this workflow unless the user explicitly requests a tiny one-step change.
 
@@ -61,16 +61,16 @@
 
 21. Agent orchestration and dispatch protocol is mandatory.
 - This rule governs the **top-level orchestrating agent** (the agent the user talks to directly — Codex, Claude Code, OpenCode, Gemini, Cursor).
-- **MANDATORY ROLE**: any agent receiving a request from the user MUST first act as the **Team Lead Orchestrator** (see `policy/team-lead-orchestrator.md` — globally at `~/policy/team-lead-orchestrator.md`).
+- **MANDATORY ROLE**: any agent receiving a request from the user MUST first act as the **Team Lead Orchestrator** (see `policy/team-lead-orchestrator.md`).
 - Before routing any task, classify it:
-  - **Trivial**: single-file isolated fix with exact user-specified change, documentation typo, running a user-specified command, clearly scoped tiny change with zero design decisions.
-  - **Non-trivial**: any new feature, any refactoring, any bug with unknown root cause, any change touching 3+ files, any API/interface/contract change, any security or performance change, any task requiring design decisions.
+  - **Trivial**: single-file exact change, doc typo, user-specified command, or tiny scoped change with zero design decisions.
+  - **Non-trivial**: new feature/refactor, unknown-root-cause bug, 3+ files, API/contract change, security/performance change, or design-heavy work.
 - **For trivial tasks**: may execute directly.
 - **For non-trivial tasks**: MUST follow the **6-Step Feature Development Lifecycle** (Rule 18). Do NOT invoke `implementation-developer` directly.
-  1. State to the user: "This is a non-trivial task — following the 6-step lifecycle per project policy."
-  2. Invoke **agent-architect** for **Research** and **Planning** → wait for `research.md` and `plan.md`.
-  3. Enter **Annotation Cycle** → wait for user feedback/CC on the plan.
-  4. Invoke **lead-dev-planner** for **Todo List** creation → wait for `tasks.jsonl` update.
+  1. Tell user: "This is a non-trivial task — following the 6-step lifecycle per project policy."
+  2. Invoke **agent-architect** for Research + Planning (`research.md`, `plan.md`).
+  3. Run **Annotation Cycle** and wait for user CC.
+  4. Invoke **lead-dev-planner** to create/update `tasks.jsonl`.
   5. Invoke **implementation-developer** for **Implement** phase.
   6. Invoke **code-review-qa** for **Feedback & Iterate** phase.
   7. After review approval, invoke **docs-writer**.
@@ -85,6 +85,22 @@
   - the expected impact on system state.
 - The agent MUST wait for explicit user confirmation (`PROCEED, OK, or YES`) before execution, even if tool permissions would otherwise allow it.
 - This rule applies to all models and systems (Claude, Codex, Cursor, Gemini, OpenCode).
+
+32. Existing architecture and review pipeline enforcement are mandatory.
+- **Architecture Freeze (default)**: agents MUST NOT modify existing architecture/design artifacts (`SPEC.md`, `ARCHITECTURE.md`, `docs/design/*`, `docs/architecture/*`) without explicit user approval.
+- **Architecture Exception**: when an architecture change is necessary, the agent MUST pause, ask permission with exact file-level diff intent and rationale, and record approval in `coordination/approval-overrides.json` before implementation.
+- **Post-Implementation Review Pipeline**: every functional change MUST produce a review report in `coordination/reviews/*.md` using `coordination/templates/review-report.md`.
+- **Gate Enforcement**: completion is blocked unless review reports pass:
+  - Windows 11: `scripts/validate-review-report.ps1`
+  - Linux/macOS: `scripts/validate-review-report.sh`
+
+33. Contracted iteration cycle proof is mandatory for non-trivial tasks.
+- Before implementation, define/update `coordination/cycle-contract.json` (`task_id`, implementation/review agents, required commands, required artifacts, size limits).
+- Review must be independent: `Reviewer` must differ from `Implementation Agent`.
+- Size limits block by default; exceptions require explicit `coordination/approval-overrides.json` approval.
+- Completion is blocked unless cycle proof passes:
+  - Windows 11: `scripts/validate-cycle-proof.ps1`
+  - Linux/macOS: `scripts/validate-cycle-proof.sh`
 
 ---
 

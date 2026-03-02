@@ -22,6 +22,7 @@ opencode.json|.config/opencode/opencode.json
 opencode.json|opencode.json
 
 # @category agents
+.claude/hooks|.claude/hooks
 .claude/agents|.claude/agents
 .codex/AGENTS.md|.codex/AGENTS.md
 .claude/agents|.codex/agents

@@ -6,9 +6,9 @@ REPO_ROOT="${2:-}"
 INPUT_JSON="$(cat 2>/dev/null || true)"
 
 PYTHON_BIN=""
-if command -v python3 >/dev/null 2>&1; then
+if python3 -c "import sys" >/dev/null 2>&1; then
   PYTHON_BIN="python3"
-elif command -v python >/dev/null 2>&1; then
+elif python -c "import sys" >/dev/null 2>&1; then
   PYTHON_BIN="python"
 fi
 

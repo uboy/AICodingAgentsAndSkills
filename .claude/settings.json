@@ -3,5 +3,17 @@
   "statusLine": {
     "type": "command",
     "command": "input=$(cat); printf '%s' \"$input\" | bash \"$HOME/scripts/render-status-line.sh\" claude"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/inject-agents-policy.sh\""
+          }
+        ]
+      }
+    ]
   }
 }

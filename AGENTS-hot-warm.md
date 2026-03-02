@@ -1,4 +1,4 @@
-﻿# PROJECT AGENTS POLICY & PROTOCOLS
+# PROJECT AGENTS POLICY & PROTOCOLS
 
 **!!! CRITICAL BOOTSTRAP INSTRUCTION !!!**
 1. You are NOT allowed to perform any code changes or terminal commands until you have executed the **Startup Ritual** (Rule 28).

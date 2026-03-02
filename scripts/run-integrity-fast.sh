@@ -39,9 +39,9 @@ collect_changed_files() {
 echo "Fast integrity check"
 echo "Repo: $REPO_ROOT"
 
-if command -v python3 >/dev/null 2>&1; then
+if python3 -c "import sys" >/dev/null 2>&1; then
   PYTHON_BIN="python3"
-elif command -v python >/dev/null 2>&1; then
+elif python -c "import sys" >/dev/null 2>&1; then
   PYTHON_BIN="python"
 else
   PYTHON_BIN=""
@@ -52,6 +52,16 @@ if [[ ! -f "$REPO_ROOT/scripts/validate-parity.sh" ]]; then
 else
   if ! bash "$REPO_ROOT/scripts/validate-parity.sh"; then
     add_result "FAIL" "validate-parity" "validate-parity.sh failed."
+  fi
+fi
+
+if [[ ! -f "$REPO_ROOT/scripts/sync-adapters.sh" ]]; then
+  add_result "FAIL" "adapter-sync" "Missing scripts/sync-adapters.sh"
+else
+  if ! bash "$REPO_ROOT/scripts/sync-adapters.sh" --check >/dev/null 2>&1; then
+    add_result "FAIL" "adapter-sync" "Adapter files out of sync with tier sources — run 'bash scripts/sync-adapters.sh' to fix."
+  else
+    add_result "PASS" "adapter-sync" "Adapter files are in sync with tier sources."
   fi
 fi
 
