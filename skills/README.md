@@ -30,6 +30,17 @@ Shared reusable skills for AI agents in this repository.
 - `gitcode-pr-issue`: create GitCode issue + PR (or combined issue+PR) through existing `gitee_util` automation with safe command flow.
 - `gitcode-pr-review`: review GitCode PR by URL using local checkout/diff evidence and severity-ranked findings.
 
+## External Skills
+
+You can fetch additional skills from the OpenAI repository using the provided scripts:
+
+- Windows: `pwsh -NoProfile -File .\scripts\fetch-openai-skills.ps1`
+- Linux/macOS: `bash ./scripts/fetch-openai-skills.sh`
+
+Supported flags:
+- `-DryRun` / `--dry-run`: show what would be done.
+- `-Force` / `--force`: overwrite existing skills.
+
 ## Why this structure
 
 - Reduces duplicate prompts with overlapping logic.
