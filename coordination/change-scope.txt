@@ -1,17 +1,15 @@
-# Active scope for task: T-20260304-gitcode-skills
-# Add GitCode issue+PR and PR-review skills with evals and mandatory coordination artifacts
+# Active scope for task: T-20260305-auto-orchestration
+# Implement cross-OS parallel agent spawning and update orchestration policy
 
-skills/gitcode-pr-issue/SKILL.md
-skills/gitcode-pr-review/SKILL.md
-skills/README.md
-evals/skills/cases/gitcode-pr-issue.md
-evals/skills/cases/gitcode-pr-review.md
+scripts/spawn-agent.ps1
+scripts/spawn-agent.sh
+scripts/generate-task.ps1
+scripts/generate-task.sh
+policy/team-lead-orchestrator.md
 coordination/cycle-contract.json
-coordination/tasks.jsonl
-coordination/state/codex.md
 coordination/change-scope.txt
-coordination/reviews/T-20260304-gitcode-skills.md
-coordination/handoffs/T-20260304-gitcode-skills-codex.md
-coordination/reviews/T-20260304-weak-context-starter-kit.md
-starter-kits/weak-context-claude-codex/**
+coordination/reviews/T-20260305-auto-orchestration.md
+coordination/handoffs/T-20260305-auto-orchestration-gemini.md
+coordination/tasks.jsonl
+coordination/state/gemini.md
 README.md

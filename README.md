@@ -597,11 +597,11 @@ Why this matters:
 - Claude Code loads memory/subagent context at session start.
 - A stale session can make newly deployed changes appear ignored.
 
-## Parallel Multi-Agent Workflow
+### Parallel Multi-Agent Workflow
 
 Goal: run `claude` / `codex` / `gemini` (and optional `cursor`, `opencode`) in isolated contexts and synchronize via files + git.
 
-### 1) Initialize isolated workspaces
+#### 1) Initialize isolated workspaces
 
 Windows:
 
@@ -615,7 +615,15 @@ Linux/macOS:
 bash ./scripts/run-multi-agent.sh
 ```
 
-Optional agents:
+#### 2) Auto-Spawn Parallel Agents
+
+For non-trivial tasks, the Team Lead Orchestrator can programmatically spawn specialized agents in new terminal windows.
+
+- Windows: `pwsh -NoProfile -File .\scripts\spawn-agent.ps1 -AgentId <id> -Role <role> -TaskId <task_id>`
+- Linux/macOS: `bash ./scripts/spawn-agent.sh --agent-id <id> --role <role> --task-id <id>`
+
+#### 3) Run each agent in its own console
+
 
 ```powershell
 pwsh -NoProfile -File .\scripts\run-multi-agent.ps1 -IncludeCursor -IncludeOpenCode

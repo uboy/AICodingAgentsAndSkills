@@ -1,6 +1,6 @@
 {
-  "task_id": "T-20260304-gitcode-skills",
-  "implementation_agent": "codex",
+  "task_id": "T-20260305-auto-orchestration",
+  "implementation_agent": "gemini",
   "review_agent": "code-review-qa",
   "required_commands": {
     "windows": [
@@ -17,11 +17,11 @@
     ]
   },
   "required_artifacts": {
-    "review_report": "coordination/reviews/T-20260304-gitcode-skills.md",
-    "handoff_report": "coordination/handoffs/T-20260304-gitcode-skills-codex.md"
+    "review_report": "coordination/reviews/T-20260305-auto-orchestration.md",
+    "handoff_report": "coordination/handoffs/T-20260305-auto-orchestration-gemini.md"
   },
   "limits": {
-    "max_functional_files": 5,
-    "max_diff_lines": 320
+    "max_functional_files": 10,
+    "max_diff_lines": 800
   }
 }
