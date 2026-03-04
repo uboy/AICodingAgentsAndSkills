@@ -1,0 +1,19 @@
+{
+  "task_id": "T-000",
+  "implementation_agent": "implementation-developer",
+  "review_agent": "code-review-qa",
+  "required_commands": [
+    "startup-ritual",
+    "syntax-check-or-lint",
+    "minimal-test"
+  ],
+  "required_artifacts": [
+    "coordination/tasks.jsonl",
+    "coordination/state/<agent>.md",
+    "coordination/handoffs/<task>-<agent>.md"
+  ],
+  "size_limits": {
+    "max_files_changed_per_step": 3,
+    "max_lines_changed_per_step": 50
+  }
+}

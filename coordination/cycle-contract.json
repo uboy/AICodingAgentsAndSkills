@@ -1,23 +1,27 @@
 {
-  "task_id": "T-20260301-cross-system-status-line",
+  "task_id": "T-20260304-gitcode-skills",
   "implementation_agent": "codex",
   "review_agent": "code-review-qa",
   "required_commands": {
     "windows": [
-      "pwsh -NoProfile -File .\\scripts\\change-control-gate.ps1",
+      "pwsh -NoProfile -File .\\scripts\\validate-skills.ps1",
+      "pwsh -NoProfile -File .\\scripts\\validate-cycle-proof.ps1",
+      "pwsh -NoProfile -File .\\scripts\\validate-review-report.ps1",
       "pwsh -NoProfile -File .\\scripts\\security-review-gate.ps1"
     ],
     "unix": [
-      "bash ./scripts/change-control-gate.sh",
+      "bash ./scripts/validate-skills.sh",
+      "bash ./scripts/validate-cycle-proof.sh",
+      "bash ./scripts/validate-review-report.sh",
       "bash ./scripts/security-review-gate.sh"
     ]
   },
   "required_artifacts": {
-    "review_report": "coordination/reviews/T-20260301-cross-system-status-line.md",
-    "handoff_report": "coordination/handoffs/T-20260301-cross-system-status-line-codex.md"
+    "review_report": "coordination/reviews/T-20260304-gitcode-skills.md",
+    "handoff_report": "coordination/handoffs/T-20260304-gitcode-skills-codex.md"
   },
   "limits": {
-    "max_functional_files": 3,
-    "max_diff_lines": 250
+    "max_functional_files": 5,
+    "max_diff_lines": 320
   }
 }

@@ -1,26 +1,17 @@
-# Active scope for task: T-20260302-cross-system-gaps
-# Cross-system policy sync, Claude SessionStart hook, status line fix, adapter auto-sync
+# Active scope for task: T-20260304-gitcode-skills
+# Add GitCode issue+PR and PR-review skills with evals and mandatory coordination artifacts
 
-.claude/hooks/inject-agents-policy.sh
-.claude/hooks/inject-agents-policy.ps1
-.claude/settings.json
-scripts/render-status-line.sh
-scripts/run-integrity-fast.sh
-scripts/sync-adapters.sh
-scripts/sync-adapters.ps1
-scripts/extract-agents-tier.sh
-scripts/extract-agents-tier.ps1
-.codex/AGENTS.md
-.cursor/rules/01-agents-policy.mdc
-.cursor/rules/02-agents-warm.mdc
-.cursor/rules/03-agents-cold.mdc
-AGENTS-hot.md
-AGENTS-warm.md
-AGENTS-cold.md
-AGENTS-hot-warm.md
-deploy/manifest.txt
-README.md
+skills/gitcode-pr-issue/SKILL.md
+skills/gitcode-pr-review/SKILL.md
+skills/README.md
+evals/skills/cases/gitcode-pr-issue.md
+evals/skills/cases/gitcode-pr-review.md
+coordination/cycle-contract.json
 coordination/tasks.jsonl
+coordination/state/codex.md
 coordination/change-scope.txt
-coordination/reviews/T-20260302-cross-system-gaps.md
-coordination/state/claude.md
+coordination/reviews/T-20260304-gitcode-skills.md
+coordination/handoffs/T-20260304-gitcode-skills-codex.md
+coordination/reviews/T-20260304-weak-context-starter-kit.md
+starter-kits/weak-context-claude-codex/**
+README.md

@@ -75,6 +75,8 @@ Python detection uses functional test (`python3 -c "import sys"`) rather than pa
   - `skills/lecture-transcript/SKILL.md`
   - `skills/meeting-notes/SKILL.md`
   - `skills/agent-system-coach/SKILL.md`
+  - `skills/gitcode-pr-issue/SKILL.md`
+  - `skills/gitcode-pr-review/SKILL.md`
 - Skill standards/template/guardrails:
   - `skills/QUALITY-STANDARD.md`
   - `skills/_template/SKILL.md`
@@ -82,6 +84,12 @@ Python detection uses functional test (`python3 -c "import sys"`) rather than pa
 - Prompt audit report:
   - `reviews/text-prompts-audit.md`
   - `reviews/community-skills-review.md`
+
+## Starter Kits
+
+Reusable configurations for specific model/workflow scenarios.
+
+- `starter-kits/weak-context-claude-codex/`: self-contained starter pack for weak models (micro-step workflow, strict coordination artifacts).
 
 ## Skill Validation And Evals
 

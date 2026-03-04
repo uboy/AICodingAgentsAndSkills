@@ -27,6 +27,8 @@ Shared reusable skills for AI agents in this repository.
 - `task-specifier`: improve one tracker task description via guiding questions, recommendations, and a clean final draft.
 - `openharmony-task-specifier`: OpenHarmony/ArkUI/Ace-specific task description assistant with lifecycle/performance risk checks.
 - `task-progress`: interactive assistant for writing high-quality English task progress comments (ArkUI/OpenHarmony focus, questions in Russian).
+- `gitcode-pr-issue`: create GitCode issue + PR (or combined issue+PR) through existing `gitee_util` automation with safe command flow.
+- `gitcode-pr-review`: review GitCode PR by URL using local checkout/diff evidence and severity-ranked findings.
 
 ## Why this structure
 
