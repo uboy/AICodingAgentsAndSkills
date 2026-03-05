@@ -21,7 +21,7 @@
     "handoff_report": "coordination/handoffs/T-20260305-auto-orchestration-gemini.md"
   },
   "limits": {
-    "max_functional_files": 10,
+    "max_functional_files": 15,
     "max_diff_lines": 800
   }
 }

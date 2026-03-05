@@ -13,3 +13,8 @@ coordination/handoffs/T-20260305-auto-orchestration-gemini.md
 coordination/tasks.jsonl
 coordination/state/gemini.md
 README.md
+AGENTS.md
+AGENTS-*.md
+.codex/AGENTS.md
+.cursor/rules/*.mdc
+.agent-memory/**

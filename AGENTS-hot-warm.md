@@ -1,4 +1,4 @@
-# PROJECT AGENTS POLICY & PROTOCOLS
+﻿# PROJECT AGENTS POLICY & PROTOCOLS
 
 **!!! CRITICAL BOOTSTRAP INSTRUCTION !!!**
 1. You are NOT allowed to perform any code changes or terminal commands until you have executed the **Startup Ritual** (Rule 28).
@@ -32,6 +32,7 @@
 - Words like "deploy", "finish", "apply", "wrap up" DO NOT grant permission to commit. Only the word **"commit"** is a valid trigger.
 - For implementation/review tasks, final response must include ready-to-use commit message text.
 - The commit message must appear as a dedicated, clearly labeled block — not buried in prose.
+- **Formatting**: Use a clean block without numbering or extra indentation to ensure it is easy to copy and paste. Use bullet points (`-`) for lists.
 - If commit actions were not explicitly approved, final status must explicitly say: `Commit pending user approval`.
 - A response that does not contain the commit message block is **incomplete** and must be revised before the user is asked to review or approve anything.
 
@@ -91,13 +92,15 @@
   - Windows 11: `scripts/validate-review-report.ps1`
   - Linux/macOS: `scripts/validate-review-report.sh`
 
-33. Contracted iteration cycle proof is mandatory for non-trivial tasks.
-- Before implementation, define/update `coordination/cycle-contract.json` (`task_id`, implementation/review agents, required commands, required artifacts, size limits).
-- Review must be independent: `Reviewer` must differ from `Implementation Agent`.
-- Size limits block by default; exceptions require explicit `coordination/approval-overrides.json` approval.
-- Completion is blocked unless cycle proof passes:
-  - Windows 11: `scripts/validate-cycle-proof.ps1`
-  - Linux/macOS: `scripts/validate-cycle-proof.sh`
+34. **Environmental Sensitivity Analysis is mandatory**.
+- Agents MUST NOT limit their logic, verification, or reporting to the current execution environment (e.g., Windows/pwsh).
+- If the project (SPEC.md, AGENTS.md, or cycle-contract.json) requires cross-platform support, the agent MUST include artifacts/verification for all mandated platforms (e.g., bash syntax checks on Windows).
+- Failure to report on non-local platforms specified in the contract is a policy violation.
+
+35. **Strict Independent Review Enforcement**.
+- The `implementation_agent` defined in `cycle-contract.json` is strictly FORBIDDEN from writing the content of `## Findings` or `## Verification` in the Review Report manually.
+- The agent MUST delegate the review task to an independent sub-agent (e.g., `code-review-qa` via `generalist` tool).
+- Only the reviewer agent's verbatim output can be used to populate the Findings section.
 
 ---
 

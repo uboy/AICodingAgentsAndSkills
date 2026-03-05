@@ -622,6 +622,11 @@ For non-trivial tasks, the Team Lead Orchestrator can programmatically spawn spe
 - Windows: `pwsh -NoProfile -File .\scripts\spawn-agent.ps1 -AgentId <id> -Role <role> -TaskId <task_id>`
 - Linux/macOS: `bash ./scripts/spawn-agent.sh --agent-id <id> --role <role> --task-id <id>`
 
+Features:
+- **Security**: Inputs are sanitized to prevent command injection.
+- **Cross-OS Fallback**: If a graphical terminal cannot be opened, agents run in the background with progress logged to `.scratchpad/agent-<id>.log`.
+- **Multiplexer Support**: Automatic integration with `wt.exe` (Windows), `tmux`, and `screen` (Unix).
+
 #### 3) Run each agent in its own console
 
 

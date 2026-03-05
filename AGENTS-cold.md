@@ -1,4 +1,4 @@
-6. Skills governance is mandatory.
+﻿6. Skills governance is mandatory.
 - Any new/updated skill under `skills/` must comply with:
   - `skills/QUALITY-STANDARD.md`
   - `skills/_shared/TEXT_GUARDRAILS.md` (for text/transcript processing skills)

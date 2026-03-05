@@ -24,6 +24,7 @@ Upon receiving a request, the agent MUST immediately classify it:
 4. **Monitoring Mode**:
    - Regularly check `coordination/tasks.jsonl` and `coordination/state/*.md` for progress updates.
    - Report high-level status to the user: "Architect is currently researching in a parallel window...".
+   - **Cross-OS Fallback**: If a visible terminal window could not be opened, the Team Lead MUST provide the user with a command to follow the logs (e.g., `tail -f .scratchpad/agent-<id>.log` or `Get-Content -Wait .scratchpad/agent-<id>.log`).
    - Once the research phase is marked as `done`, proceed to the next step.
 5. **Trigger Planning**: Repeat the spawning process for `lead-dev-planner`.
 6. **Wait for Approval**: Do not proceed to implementation until the user provides feedback or explicit approval (CC - Change Control).
