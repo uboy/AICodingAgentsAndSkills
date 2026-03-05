@@ -134,6 +134,9 @@ Change-scope control (prevents unrelated edits in one task):
 Additional gate behavior:
 - Trivial config-only changes (for example `opencode.json`, `.claude/settings.json`, `.gemini/settings.json`, `configs/codex/config.toml`, `README.md`, and `.agent-memory/*`) use a fast-path and do not require full review/checklist artifacts for every tiny fix.
 - `.agent-memory/*` is treated as allowed support metadata for correction-loop updates.
+- Documentation contract scope (Rule 31):
+  - For this repository's policy/tooling changes, docs evidence is satisfied by updating `README.md` and/or relevant files in `policy/` or `coordination/`.
+  - For external product runtime changes (outside this repository), also update `SPEC.md`, `docs/REQUIREMENTS_TRACEABILITY.md`, and `docs/design/<feature>-vN.md`.
 - Significant logic changes (requirements/behavior/capabilities enforcement) must update `README.md` in the same change set (`significant-doc-sync` gate check).
 
 Run:

@@ -31,6 +31,54 @@ function Test-AnyPattern([string]$RelPath, [string[]]$Patterns) {
     return $false
 }
 
+function ConvertTo-HashtableRecursive([object]$InputObject) {
+    if ($null -eq $InputObject) { return $null }
+
+    if ($InputObject -is [System.Collections.IDictionary]) {
+        $table = @{}
+        foreach ($key in $InputObject.Keys) {
+            $table["$key"] = ConvertTo-HashtableRecursive -InputObject $InputObject[$key]
+        }
+        return $table
+    }
+
+    if ($InputObject -is [System.Collections.IEnumerable] -and -not ($InputObject -is [string])) {
+        $items = @()
+        foreach ($item in $InputObject) {
+            $items += ,(ConvertTo-HashtableRecursive -InputObject $item)
+        }
+        return $items
+    }
+
+    if ($InputObject -is [pscustomobject]) {
+        $table = @{}
+        foreach ($prop in $InputObject.PSObject.Properties) {
+            $table[$prop.Name] = ConvertTo-HashtableRecursive -InputObject $prop.Value
+        }
+        return $table
+    }
+
+    return $InputObject
+}
+
+function ConvertFrom-JsonHashtableCompat([string]$JsonText) {
+    $jsonCmd = Get-Command ConvertFrom-Json -ErrorAction Stop
+    $supportsAsHashtable = $false
+    foreach ($p in $jsonCmd.Parameters.Keys) {
+        if ($p -eq "AsHashtable") {
+            $supportsAsHashtable = $true
+            break
+        }
+    }
+
+    if ($supportsAsHashtable) {
+        return ($JsonText | ConvertFrom-Json -AsHashtable)
+    }
+
+    $obj = $JsonText | ConvertFrom-Json
+    return ConvertTo-HashtableRecursive -InputObject $obj
+}
+
 $issues = New-Object System.Collections.Generic.List[object]
 $failCount = 0
 $warnCount = 0
@@ -286,7 +334,7 @@ $approval = @{
 }
 if (Test-Path -LiteralPath $approvalPath -PathType Leaf) {
     try {
-        $parsed = Get-Content -LiteralPath $approvalPath -Raw | ConvertFrom-Json -AsHashtable
+        $parsed = ConvertFrom-JsonHashtableCompat -JsonText (Get-Content -LiteralPath $approvalPath -Raw)
         if ($parsed.ContainsKey("allow_existing_test_modifications")) {
             $approval.allow_existing_test_modifications = [bool]$parsed.allow_existing_test_modifications
         }

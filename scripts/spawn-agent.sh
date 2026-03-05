@@ -33,11 +33,6 @@ if [[ ! "$TASK_ID" =~ ^[a-zA-Z0-9-]+$ ]]; then echo "Invalid TaskId: $TASK_ID"; 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORKTREE="$REPO_ROOT/.worktrees/$AGENT_ID"
 
-if [ ! -d "$WORKTREE" ]; then
-    echo "[!] Worktree not found for $AGENT_ID. Attempting to initialize..."
-    bash "$REPO_ROOT/scripts/run-multi-agent.sh" --agents "$AGENT_ID"
-fi
-
 CLI=$AGENT_ID
 case $AGENT_ID in
     claude) CLI="claude" ;;
@@ -51,9 +46,17 @@ PROMPT="Assume role: ${ROLE}. Resume task: ${TASK_ID}. Execute Startup Ritual: b
 LAUNCH_CMD="cd \"${WORKTREE}\" && echo '--- AUTO-ORCHESTRATION: ${AGENT_ID} ---' && ${CLI} \"${PROMPT}\""
 
 if [ "$DRY_RUN" -eq 1 ]; then
+    if [ ! -d "$WORKTREE" ]; then
+        echo "[DRY-RUN] Worktree missing for $AGENT_ID; would initialize via scripts/run-multi-agent.sh."
+    fi
     echo "[DRY-RUN] Would launch new terminal for ${AGENT_ID} with command:"
     echo "$LAUNCH_CMD"
     exit 0
+fi
+
+if [ ! -d "$WORKTREE" ]; then
+    echo "[!] Worktree not found for $AGENT_ID. Attempting to initialize..."
+    bash "$REPO_ROOT/scripts/run-multi-agent.sh" --agents "$AGENT_ID"
 fi
 
 echo "[*] Attempting to spawn ${AGENT_ID} in a new terminal window..."

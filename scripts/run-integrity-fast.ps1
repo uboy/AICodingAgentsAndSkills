@@ -48,6 +48,19 @@ function Get-GitChangedFiles([string]$Root) {
     return @($all | Select-Object -Unique)
 }
 
+function Get-RelativePathCompat([string]$BasePath, [string]$TargetPath) {
+    $method = [System.IO.Path].GetMethod("GetRelativePath", [Type[]]@([string], [string]))
+    if ($method) {
+        return [System.IO.Path]::GetRelativePath($BasePath, $TargetPath)
+    }
+
+    $base = (Resolve-Path -LiteralPath $BasePath).Path
+    $target = (Resolve-Path -LiteralPath $TargetPath).Path
+    $baseUri = New-Object System.Uri(($base.TrimEnd('\') + '\'))
+    $targetUri = New-Object System.Uri($target)
+    return [System.Uri]::UnescapeDataString($baseUri.MakeRelativeUri($targetUri).ToString()).Replace('/', '\')
+}
+
 Write-Host "Fast integrity check"
 Write-Host "Repo: $RepoRoot"
 
@@ -78,7 +91,7 @@ foreach ($path in $psTargets) {
     $tokens = $null
     [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $path), [ref]$tokens, [ref]$errors)
     if ($errors.Count -gt 0) {
-        $rel = [System.IO.Path]::GetRelativePath($RepoRoot, $path)
+        $rel = Get-RelativePathCompat -BasePath $RepoRoot -TargetPath $path
         Add-Result -Severity "FAIL" -Check "ps-parse" -Detail ("PowerShell parse errors in {0}" -f $rel)
     }
 }
@@ -97,7 +110,7 @@ if ($shTargets.Count -gt 0 -and -not $bash) {
         $cmd = if ($bash -is [System.Management.Automation.CommandInfo]) { $bash.Source } else { $bash.FullName }
         $bashOutput = & $cmd -n $path 2>&1
         if ($LASTEXITCODE -ne 0) {
-            $rel = [System.IO.Path]::GetRelativePath($RepoRoot, $path)
+            $rel = Get-RelativePathCompat -BasePath $RepoRoot -TargetPath $path
             $bashText = ($bashOutput | Out-String)
             if ($bashText -match "couldn't create signal pipe|Win32 error 5|Access is denied") {
                 if (-not $bashEnvIssueReported) {
@@ -112,7 +125,7 @@ if ($shTargets.Count -gt 0 -and -not $bash) {
 }
 
 $jsonFiles = @(
-    ".opencode/opencode.json",
+    "opencode.json",
     ".gemini/settings.json"
 )
 foreach ($rel in $jsonFiles) {

@@ -34,6 +34,9 @@ bash ./scripts/security-review-gate.sh
 - blocks out-of-scope file changes based on `coordination/change-scope.txt`
 - requires checklist/handoff evidence for functional changes (`coordination/tasks.jsonl`, `coordination/handoffs/*.md`)
 - requires docs/policy evidence for functional changes (`README.md` or `policy/*.md`/equivalent docs)
+- Rule 31 scope:
+  - for this repository policy/tooling changes, docs evidence above is sufficient;
+  - for external product runtime changes, additionally require `SPEC.md`, `docs/REQUIREMENTS_TRACEABILITY.md`, and `docs/design/<feature>-vN.md`
 - **significant logic documentation contract**:
   - if changes affect requirements/behavior/capabilities enforcement logic (for example gate scripts, validators, install/deploy core, policy profiles/rules), `README.md` update is mandatory in the same change set
   - gate check: `significant-doc-sync`

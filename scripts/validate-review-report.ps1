@@ -6,6 +6,19 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+function Get-RelativePathCompat([string]$BasePath, [string]$TargetPath) {
+    $method = [System.IO.Path].GetMethod("GetRelativePath", [Type[]]@([string], [string]))
+    if ($method) {
+        return [System.IO.Path]::GetRelativePath($BasePath, $TargetPath)
+    }
+
+    $base = (Resolve-Path -LiteralPath $BasePath).Path
+    $target = (Resolve-Path -LiteralPath $TargetPath).Path
+    $baseUri = New-Object System.Uri(($base.TrimEnd('\') + '\'))
+    $targetUri = New-Object System.Uri($target)
+    return [System.Uri]::UnescapeDataString($baseUri.MakeRelativeUri($targetUri).ToString()).Replace('/', '\')
+}
+
 $reviewsDir = Join-Path $RepoRoot "coordination/reviews"
 if (-not (Test-Path -LiteralPath $reviewsDir -PathType Container)) {
     Write-Error "Missing coordination/reviews directory."
@@ -32,7 +45,7 @@ $requiredSections = @("## Scope", "## Findings", "## Verification", "## Residual
 $failCount = 0
 
 foreach ($filePath in $files) {
-    $relPath = [System.IO.Path]::GetRelativePath($RepoRoot, $filePath).Replace("\", "/")
+    $relPath = (Get-RelativePathCompat -BasePath $RepoRoot -TargetPath $filePath).Replace("\", "/")
     $content = Get-Content -LiteralPath $filePath -Raw
 
     $missing = @()

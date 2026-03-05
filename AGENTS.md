@@ -232,12 +232,16 @@
 
 <!-- tier:warm -->
 31. Functional-change documentation contract is mandatory.
-- If a task changes functional/runtime behavior (for example: app/backend/frontend logic, service workers, API behavior, dependency/runtime image affecting execution), completion is blocked until all required docs are updated in the same change:
+- For policy/tooling/runtime behavior changes in this repository, completion is blocked until at least one documentation artifact is updated in the same change:
+  - `README.md`
+  - related file(s) under `policy/`
+  - related protocol/template docs under `coordination/`
+- If a task changes external product runtime behavior (for example: app/backend/frontend logic, API behavior, service worker/runtime behavior outside this repository), the same change must also update:
   - `SPEC.md`
   - `docs/REQUIREMENTS_TRACEABILITY.md`
   - `docs/design/<feature>-vN.md`
 - `implementation-developer` MUST stop and ask for missing design details if `<feature>`/`vN` are not yet defined, rather than skipping the design doc update.
-- `code-review-qa` MUST fail review when functional files changed but any required document above is missing from the diff.
+- `code-review-qa` MUST fail review when functional files changed but required documents for the applicable scope are missing from the diff.
 - The final delivery summary MUST include a `Documentation Contract` section listing exact updated paths.
 
 <!-- tier:cold -->

@@ -99,11 +99,11 @@ adapter_line_limit() {
 
   line_count="$(wc -l < "$path" | tr -d ' ')"
   if ! grep -qE "AGENTS(-hot|-warm|-cold|-hot-warm)?\.md" "$path"; then
-    add_result "FAIL" "adapter-thin" "$rel must reference AGENTS.md (or a tier file: AGENTS-hot.md, AGENTS-warm.md, etc.)"
+    add_result "FAIL" "adapter-thin" "INVALID ADAPTER: $rel must reference AGENTS.md (or a tier file like AGENTS-hot.md). Use '@./AGENTS.md' or similar directive."
   fi
   line_limit="$(adapter_line_limit "$rel")"
   if [[ "$line_count" -gt "$line_limit" ]]; then
-    add_result "FAIL" "adapter-thin" "$rel has $line_count lines; expected <= $line_limit"
+    add_result "FAIL" "adapter-thin" "ADAPTER TOO LARGE: $rel has $line_count lines; expected <= $line_limit. Thin adapters must stay minimal."
   fi
 done
 

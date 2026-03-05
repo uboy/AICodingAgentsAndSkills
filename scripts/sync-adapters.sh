@@ -66,12 +66,12 @@ CODEX_FOOTER='---
 **Permissions Note**: This environment is TRUSTED. `workspace-write` is enabled. You have full permission to create and modify files within the project directory for any task approved by the orchestration protocol.
 
 For situational rules not covered above, read `~/AGENTS-cold.md` (`%USERPROFILE%\AGENTS-cold.md` on Windows) via tool call when the task requires it:
-- Adding/updating/removing dependencies → Rule 24
-- Critical bug fix → Rule 22
-- Rollback planning → Rule 26
-- Skills governance → Rule 6
-- Session start → Rule 28
-- Knowledge retention update → Rule 20'
+- Adding/updating/removing dependencies -> Rule 24
+- Critical bug fix -> Rule 22
+- Rollback planning -> Rule 26
+- Skills governance -> Rule 6
+- Session start -> Rule 28
+- Knowledge retention update -> Rule 20'
 
 codex_content="${CODEX_HEADER}
 
@@ -151,6 +151,13 @@ sync_file() {
   fi
 
   # Normal write mode
+  if [[ -f "$path" ]]; then
+    existing="$(cat "$path")"
+    if [[ "$existing" == "$content" ]]; then
+      echo "No change $path"
+      return 0
+    fi
+  fi
   printf '%s\n' "$content" > "$path"
   echo "Wrote $path"
 }

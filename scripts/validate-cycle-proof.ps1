@@ -23,6 +23,54 @@ function Normalize-RelPath([string]$RelPath) {
     return ($RelPath -replace "\\", "/").TrimStart("/")
 }
 
+function ConvertTo-HashtableRecursive([object]$InputObject) {
+    if ($null -eq $InputObject) { return $null }
+
+    if ($InputObject -is [System.Collections.IDictionary]) {
+        $table = @{}
+        foreach ($key in $InputObject.Keys) {
+            $table["$key"] = ConvertTo-HashtableRecursive -InputObject $InputObject[$key]
+        }
+        return $table
+    }
+
+    if ($InputObject -is [System.Collections.IEnumerable] -and -not ($InputObject -is [string])) {
+        $items = @()
+        foreach ($item in $InputObject) {
+            $items += ,(ConvertTo-HashtableRecursive -InputObject $item)
+        }
+        return $items
+    }
+
+    if ($InputObject -is [pscustomobject]) {
+        $table = @{}
+        foreach ($prop in $InputObject.PSObject.Properties) {
+            $table[$prop.Name] = ConvertTo-HashtableRecursive -InputObject $prop.Value
+        }
+        return $table
+    }
+
+    return $InputObject
+}
+
+function ConvertFrom-JsonHashtableCompat([string]$JsonText) {
+    $jsonCmd = Get-Command ConvertFrom-Json -ErrorAction Stop
+    $supportsAsHashtable = $false
+    foreach ($p in $jsonCmd.Parameters.Keys) {
+        if ($p -eq "AsHashtable") {
+            $supportsAsHashtable = $true
+            break
+        }
+    }
+
+    if ($supportsAsHashtable) {
+        return ($JsonText | ConvertFrom-Json -AsHashtable)
+    }
+
+    $obj = $JsonText | ConvertFrom-Json
+    return ConvertTo-HashtableRecursive -InputObject $obj
+}
+
 $issues = New-Object System.Collections.Generic.List[object]
 $failCount = 0
 $warnCount = 0
@@ -49,7 +97,7 @@ if (-not (Test-Path -LiteralPath $contractPath -PathType Leaf)) {
     Add-Issue -Severity "FAIL" -Check "contract-file" -Detail "Missing cycle contract file: $ContractFile"
 } else {
     try {
-        $contract = Get-Content -LiteralPath $contractPath -Raw | ConvertFrom-Json -AsHashtable
+        $contract = ConvertFrom-JsonHashtableCompat -JsonText (Get-Content -LiteralPath $contractPath -Raw)
         Add-Issue -Severity "PASS" -Check "contract-file" -Detail "Loaded cycle contract: $ContractFile"
     } catch {
         Add-Issue -Severity "FAIL" -Check "contract-file" -Detail "Invalid JSON in $ContractFile"
@@ -160,7 +208,7 @@ $approvalPath = Join-Path $RepoRoot $ApprovalFile
 $allowLargeChanges = $false
 if (Test-Path -LiteralPath $approvalPath -PathType Leaf) {
     try {
-        $approval = Get-Content -LiteralPath $approvalPath -Raw | ConvertFrom-Json -AsHashtable
+        $approval = ConvertFrom-JsonHashtableCompat -JsonText (Get-Content -LiteralPath $approvalPath -Raw)
         if ($approval.ContainsKey("allow_large_changes")) {
             $allowLargeChanges = [bool]$approval.allow_large_changes
         }
@@ -206,6 +254,20 @@ if ($diffLines -gt $maxDiff) {
     }
 } else {
     Add-Issue -Severity "PASS" -Check "diff-size" -Detail ("Diff lines {0} <= {1}" -f $diffLines, $maxDiff)
+}
+
+if ($functionalChanged.Count -gt 0) {
+    if ($changed -contains $reviewPathRel) {
+        Add-Issue -Severity "PASS" -Check "review-freshness" -Detail "Review artifact is included in current change set."
+    } else {
+        Add-Issue -Severity "FAIL" -Check "review-freshness" -Detail ("Functional changes detected, but review artifact was not updated: {0}" -f $reviewPathRel)
+    }
+
+    if ($changed -contains $handoffPathRel) {
+        Add-Issue -Severity "PASS" -Check "handoff-freshness" -Detail "Handoff artifact is included in current change set."
+    } else {
+        Add-Issue -Severity "FAIL" -Check "handoff-freshness" -Detail ("Functional changes detected, but handoff artifact was not updated: {0}" -f $handoffPathRel)
+    }
 }
 
 $reviewPath = Join-Path $RepoRoot $reviewPathRel

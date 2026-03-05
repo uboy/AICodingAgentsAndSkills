@@ -28,10 +28,6 @@ if ($Role -notmatch $SanityRegex) { throw "Invalid Role: $Role" }
 if ($TaskId -notmatch $SanityRegex) { throw "Invalid TaskId: $TaskId" }
 
 $Worktree = Join-Path $RepoRoot ".worktrees\$AgentId"
-if (-not (Test-Path $Worktree)) {
-    Write-Host "[!] Worktree not found for $AgentId. Attempting to initialize..." -ForegroundColor Yellow
-    & pwsh -NoProfile -File (Join-Path $RepoRoot "scripts\run-multi-agent.ps1") -Agents $AgentId
-}
 
 $Cli = switch ($AgentId) {
     "claude" { "claude" }
@@ -46,9 +42,17 @@ $Prompt = "Assume role: ${Role}. Resume task: ${TaskId}. Execute Startup Ritual:
 $LaunchCommand = "cd `"${Worktree}`"; Write-Host '--- AUTO-ORCHESTRATION: ${AgentId} ---' -ForegroundColor Cyan; ${Cli} `"${Prompt}`""
 
 if ($DryRun) {
+    if (-not (Test-Path $Worktree)) {
+        Write-Host "[DRY-RUN] Worktree missing for ${AgentId}; would initialize via scripts\\run-multi-agent.ps1." -ForegroundColor Yellow
+    }
     Write-Host "[DRY-RUN] Would launch new terminal for ${AgentId} with command:" -ForegroundColor Yellow
     Write-Host $LaunchCommand
     exit 0
+}
+
+if (-not (Test-Path $Worktree)) {
+    Write-Host "[!] Worktree not found for $AgentId. Attempting to initialize..." -ForegroundColor Yellow
+    & pwsh -NoProfile -File (Join-Path $RepoRoot "scripts\run-multi-agent.ps1") -Agents $AgentId
 }
 
 Write-Host "[*] Attempting to spawn ${AgentId} in a new window..." -ForegroundColor Green

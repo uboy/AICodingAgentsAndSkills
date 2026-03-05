@@ -240,6 +240,25 @@ else
   add_issue "PASS" "diff-size" "Diff lines $diff_lines <= $max_diff_lines"
 fi
 
+if (( functional_count > 0 )); then
+  has_fresh_review=0
+  has_fresh_handoff=0
+  for rel in "${changed[@]}"; do
+    [[ "$rel" == "$review_report_rel" ]] && has_fresh_review=1
+    [[ "$rel" == "$handoff_report_rel" ]] && has_fresh_handoff=1
+  done
+  if (( has_fresh_review == 1 )); then
+    add_issue "PASS" "review-freshness" "Review artifact is included in current change set."
+  else
+    add_issue "FAIL" "review-freshness" "Functional changes detected, but review artifact was not updated: $review_report_rel"
+  fi
+  if (( has_fresh_handoff == 1 )); then
+    add_issue "PASS" "handoff-freshness" "Handoff artifact is included in current change set."
+  else
+    add_issue "FAIL" "handoff-freshness" "Functional changes detected, but handoff artifact was not updated: $handoff_report_rel"
+  fi
+fi
+
 review_report_path="$REPO_ROOT/$(printf '%s' "$review_report_rel" | sed 's#\\#/#g')"
 if [[ ! -f "$review_report_path" ]]; then
   add_issue "FAIL" "review-artifact" "Required review report not found: $review_report_rel"

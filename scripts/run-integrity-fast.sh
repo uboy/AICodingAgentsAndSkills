@@ -50,18 +50,20 @@ fi
 if [[ ! -f "$REPO_ROOT/scripts/validate-parity.sh" ]]; then
   add_result "FAIL" "validate-parity" "Missing scripts/validate-parity.sh"
 else
-  if ! bash "$REPO_ROOT/scripts/validate-parity.sh"; then
-    add_result "FAIL" "validate-parity" "validate-parity.sh failed."
+  if parity_output="$(bash "$REPO_ROOT/scripts/validate-parity.sh" 2>&1)"; then
+    add_result "PASS" "parity" "Cross-OS and cross-system parity checks passed."
+  else
+    add_result "FAIL" "validate-parity" "validate-parity.sh failed:\n$parity_output"
   fi
 fi
 
 if [[ ! -f "$REPO_ROOT/scripts/sync-adapters.sh" ]]; then
   add_result "FAIL" "adapter-sync" "Missing scripts/sync-adapters.sh"
 else
-  if ! bash "$REPO_ROOT/scripts/sync-adapters.sh" --check >/dev/null 2>&1; then
-    add_result "FAIL" "adapter-sync" "Adapter files out of sync with tier sources — run 'bash scripts/sync-adapters.sh' to fix."
-  else
+  if sync_output="$(bash "$REPO_ROOT/scripts/sync-adapters.sh" --check 2>&1)"; then
     add_result "PASS" "adapter-sync" "Adapter files are in sync with tier sources."
+  else
+    add_result "FAIL" "adapter-sync" "Adapter files out of sync: $sync_output"
   fi
 fi
 
@@ -120,9 +122,9 @@ fi
 
 for shf in "${sh_targets[@]}"; do
   [[ -f "$shf" ]] || continue
-  if ! bash -n "$shf" >/dev/null 2>&1; then
-    rel="${shf#$REPO_ROOT/}"
-    add_result "FAIL" "bash-parse" "bash -n failed for $rel"
+  rel="${shf#$REPO_ROOT/}"
+  if ! parse_err=$(bash -n "$shf" 2>&1); then
+    add_result "FAIL" "bash-parse" "bash -n failed for $rel:\n$parse_err"
   fi
 done
 

@@ -159,6 +159,13 @@ function Sync-AdapterFile {
     }
 
     # Normal write mode — write with LF line endings, no BOM
+    if (Test-Path $Path) {
+        $existing = [System.IO.File]::ReadAllText($Path).Replace("`r`n", "`n").TrimEnd("`n", "`r")
+        if ($existing -eq $Content) {
+            Write-Host "No change $Path"
+            return
+        }
+    }
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($Content + "`n")
     [System.IO.File]::WriteAllBytes($Path, $bytes)
     Write-Host "Wrote $Path"
