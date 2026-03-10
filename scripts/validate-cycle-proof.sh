@@ -106,7 +106,9 @@ print(d.get("required_artifacts", {}).get("handoff_report", ""))
 print(int(d.get("limits", {}).get("max_functional_files", 0)))
 print(int(d.get("limits", {}).get("max_diff_lines", 0)))
 for cmd in d.get("required_commands", {}).get("unix", []):
-    print("CMD::" + cmd)
+    print("CMD_UNIX::" + cmd)
+for cmd in d.get("required_commands", {}).get("windows", []):
+    print("CMD_WIN::" + cmd)
 PY
 )
 
@@ -123,10 +125,13 @@ max_functional_files="$(strip_cr "${contract_vals[5]:-0}")"
 max_diff_lines="$(strip_cr "${contract_vals[6]:-0}")"
 
 required_unix_cmds=()
+required_win_cmds=()
 for line in "${contract_vals[@]}"; do
   cleaned_line="$(strip_cr "$line")"
-  if [[ "$cleaned_line" == CMD::* ]]; then
-    required_unix_cmds+=("${cleaned_line#CMD::}")
+  if [[ "$cleaned_line" == CMD_UNIX::* ]]; then
+    required_unix_cmds+=("${cleaned_line#CMD_UNIX::}")
+  elif [[ "$cleaned_line" == CMD_WIN::* ]]; then
+    required_win_cmds+=("${cleaned_line#CMD_WIN::}")
   fi
 done
 
@@ -138,6 +143,9 @@ for required_field in "$task_id" "$impl_agent" "$review_agent" "$review_report_r
 done
 if [[ ${#required_unix_cmds[@]} -eq 0 ]]; then
   add_issue "FAIL" "contract-schema" "required_commands.unix must contain at least one command."
+fi
+if [[ ${#required_win_cmds[@]} -eq 0 ]]; then
+  add_issue "FAIL" "contract-schema" "required_commands.windows must contain at least one command."
 fi
 if [[ ! "$max_functional_files" =~ ^[0-9]+$ ]]; then
   add_issue "FAIL" "contract-schema" "limits.max_functional_files must be a non-negative integer."

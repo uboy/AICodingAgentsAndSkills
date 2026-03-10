@@ -342,7 +342,7 @@ Hierarchy:
 - `security-review-gate`: Entry point orchestrator.
   - `change-control-gate`: Scope and docs contract.
     - `validate-review-report`: Review report structure.
-  - `validate-cycle-proof`: Contract and limits.
+  - `validate-cycle-proof`: Contract and limits (enforces both Windows and Unix schema).
   - `run-integrity-fast`: System consistency.
 
 Commands:

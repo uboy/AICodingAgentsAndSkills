@@ -8,7 +8,7 @@ The security gate operates hierarchically:
 - **`security-review-gate`**: Entry point; coordinates all specialized gates below.
   - **`change-control-gate`**: Enforces scope, docs contract, and review report existence.
     - **`validate-review-report`**: Specialized validator for review report structure and quality.
-  - **`validate-cycle-proof`**: Enforces contract compliance and iteration limits.
+  - **`validate-cycle-proof`**: Enforces contract compliance and iteration limits. **Note: Both `.ps1` and `.sh` versions are executed to ensure cross-platform schema completeness.**
   - **`validate-coordination`**: Validates handoff and state artifacts.
   - **`run-integrity-fast`**: Cross-OS and cross-system consistency checks.
 

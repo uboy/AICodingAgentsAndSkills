@@ -128,6 +128,14 @@ if ($requiredWin.Count -eq 0) {
     Add-Issue -Severity "FAIL" -Check "contract-schema" -Detail "required_commands.windows must contain at least one command."
 }
 
+$requiredUnix = @()
+if ($contract.required_commands -and $contract.required_commands.unix) {
+    $requiredUnix = @($contract.required_commands.unix)
+}
+if ($requiredUnix.Count -eq 0) {
+    Add-Issue -Severity "FAIL" -Check "contract-schema" -Detail "required_commands.unix must contain at least one command."
+}
+
 $reviewPathRel = Normalize-RelPath "$($contract.required_artifacts.review_report)"
 $handoffPathRel = Normalize-RelPath "$($contract.required_artifacts.handoff_report)"
 

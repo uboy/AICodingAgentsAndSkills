@@ -230,6 +230,24 @@ if (Test-Path -LiteralPath $cycleProofScript -PathType Leaf) {
     Add-Issue -Severity "FAIL" -Check "cycle-proof" -Detail "scripts/validate-cycle-proof.ps1 not found."
 }
 
+# Cross-platform cycle-proof check
+$cycleProofSh = Join-Path $RepoRoot "scripts/validate-cycle-proof.sh"
+if (Test-Path -LiteralPath $cycleProofSh -PathType Leaf) {
+    $bash = Get-Command bash -ErrorAction SilentlyContinue
+    if (-not $bash -and (Test-Path "C:\Program Files\Git\bin\bash.exe")) {
+        $bash = Get-Item "C:\Program Files\Git\bin\bash.exe"
+    }
+    if ($bash) {
+        $cmd = if ($bash -is [System.Management.Automation.CommandInfo]) { $bash.Source } else { $bash.FullName }
+        & $cmd $cycleProofSh --repo-root $RepoRoot 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Add-Issue -Severity "FAIL" -Check "cycle-proof-sh" -Detail "validate-cycle-proof.sh failed (cross-platform check)."
+        } else {
+            Add-Issue -Severity "PASS" -Check "cycle-proof-sh" -Detail "validate-cycle-proof.sh passed (cross-platform check)."
+        }
+    }
+}
+
 if ($issues.Count -eq 0) {
     Add-Issue -Severity "PASS" -Check "gate" -Detail "No issues detected."
 }

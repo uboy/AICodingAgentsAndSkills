@@ -4,8 +4,8 @@
 deploy/manifest.txt
 policy/security-review-gate.md
 README.md
-scripts/validate-review-report.ps1
 scripts/validate-cycle-proof.ps1
+scripts/validate-cycle-proof.sh
 scripts/security-review-gate.ps1
 scripts/validate-coordination.ps1
 coordination/change-scope.txt
