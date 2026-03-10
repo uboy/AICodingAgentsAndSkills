@@ -5,8 +5,8 @@ param(
     [string]$ConflictAction = "ask",
     [string[]]$Category = @(),
     [switch]$DryRun,
-    [switch]$InstallDeps,   # opt-in: auto-install via winget (off by default)
-    [switch]$NoDeps,        # kept for compatibility; same as default
+    [switch]$InstallDeps,
+    [switch]$NoDeps,
     [switch]$NonInteractive
 )
 
@@ -21,28 +21,18 @@ function Resolve-HomeDir([string]$OverrideHome) {
     if (-not [string]::IsNullOrWhiteSpace($OverrideHome)) {
         return $OverrideHome
     }
-
     $candidates = @()
-    if (-not [string]::IsNullOrWhiteSpace($env:HOME)) {
-        $candidates += $env:HOME
-    }
-    if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) {
-        $candidates += $env:USERPROFILE
-    }
+    if (-not [string]::IsNullOrWhiteSpace($env:HOME)) { $candidates += $env:HOME }
+    if (-not [string]::IsNullOrWhiteSpace($env:USERPROFILE)) { $candidates += $env:USERPROFILE }
     $profileHome = [Environment]::GetFolderPath("UserProfile")
-    if (-not [string]::IsNullOrWhiteSpace($profileHome)) {
-        $candidates += $profileHome
-    }
+    if (-not [string]::IsNullOrWhiteSpace($profileHome)) { $candidates += $profileHome }
 
     foreach ($candidate in $candidates) {
-        if ([string]::IsNullOrWhiteSpace($candidate)) {
-            continue
-        }
+        if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
         if (Test-Path -LiteralPath $candidate -PathType Container) {
             return (Resolve-Path -LiteralPath $candidate).Path
         }
     }
-
     throw "Unable to resolve home directory. Pass -HomeDir explicitly."
 }
 
@@ -70,9 +60,7 @@ function Get-AbsPath([string]$Path) {
 
 function Ensure-ParentDir([string]$Path) {
     $parent = Split-Path -Parent $Path
-    if ([string]::IsNullOrWhiteSpace($parent)) {
-        return
-    }
+    if ([string]::IsNullOrWhiteSpace($parent)) { return }
     if (-not (Test-Path -LiteralPath $parent)) {
         Invoke-Exec { New-Item -ItemType Directory -Path $parent -Force | Out-Null } "Create directory: $parent"
     }
@@ -91,11 +79,8 @@ function Show-Diff([string]$Source, [string]$Target) {
         try {
             & git --no-pager diff --no-index -- $Target $Source | Out-Host
             return
-        } catch {
-            # Non-zero code is expected if files differ.
-        }
+        } catch { }
     }
-
     $left = Get-Content -LiteralPath $Target -ErrorAction SilentlyContinue
     $right = Get-Content -LiteralPath $Source -ErrorAction SilentlyContinue
     Compare-Object -ReferenceObject $left -DifferenceObject $right -IncludeEqual:$false |
@@ -106,11 +91,8 @@ function Show-Diff([string]$Source, [string]$Target) {
 
 function Write-MergedConflictFile([string]$Source, [string]$Target) {
     $existingText = ""
-    if (Test-Path -LiteralPath $Target) {
-        $existingText = Get-Content -LiteralPath $Target -Raw
-    }
+    if (Test-Path -LiteralPath $Target) { $existingText = Get-Content -LiteralPath $Target -Raw }
     $sourceText = Get-Content -LiteralPath $Source -Raw
-
     $merged = @(
         "<<<<<<< LOCAL ($Target)"
         $existingText
@@ -118,7 +100,6 @@ function Write-MergedConflictFile([string]$Source, [string]$Target) {
         $sourceText
         ">>>>>>> REPOSITORY ($Source)"
     ) -join "`n"
-
     Invoke-Exec { Set-Content -LiteralPath $Target -Value $merged -NoNewline } "Write merged conflict file: $Target"
 }
 
@@ -126,61 +107,43 @@ function Resolve-LinkTarget([string]$Path) {
     $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
     if (-not $item) { return $null }
     if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { return $null }
-
     try {
         $linked = $item.ResolveLinkTarget($true)
-        if ($linked) {
-            return $linked.FullName
-        }
-    } catch {
-        return $null
-    }
+        if ($linked) { return $linked.FullName }
+    } catch { return $null }
     return $null
 }
 
 function New-Link([string]$Source, [string]$Target) {
     Ensure-ParentDir $Target
     $sourceAbs = Get-AbsPath $Source
-
     if ($DryRun) {
         Write-Host "[DRY] Link: $Target -> $sourceAbs"
         return
     }
-
-    if (Test-Path -LiteralPath $Target) {
-        Remove-Item -LiteralPath $Target -Force -Recurse
-    }
-
+    if (Test-Path -LiteralPath $Target) { Remove-Item -LiteralPath $Target -Force -Recurse }
     try {
         New-Item -ItemType SymbolicLink -Path $Target -Target $sourceAbs -Force | Out-Null
-        return
     } catch {
         if (Test-Path -LiteralPath $Source -PathType Leaf) {
             try {
                 New-Item -ItemType HardLink -Path $Target -Target $sourceAbs -Force | Out-Null
-                return
             } catch {
-                throw "Unable to create file link for $Target -> $sourceAbs. Enable Developer Mode or run elevated."
+                throw "Unable to create hard link for $Target -> $sourceAbs."
             }
-        }
-        try {
-            New-Item -ItemType Junction -Path $Target -Target $sourceAbs -Force | Out-Null
-            return
-        } catch {
-            throw "Unable to create directory link for $Target -> $sourceAbs. Enable Developer Mode or run elevated."
+        } else {
+            try {
+                New-Item -ItemType Junction -Path $Target -Target $sourceAbs -Force | Out-Null
+            } catch {
+                throw "Unable to create junction for $Target -> $sourceAbs."
+            }
         }
     }
 }
 
 function Select-Action([string]$Source, [string]$Target) {
-    if ($ConflictAction -ne "ask") {
-        return $ConflictAction
-    }
-    # Fall back to keep when not interactive
-    if ($NonInteractive -or -not [System.Environment]::UserInteractive) {
-        return "keep"
-    }
-
+    if ($ConflictAction -ne "ask") { return $ConflictAction }
+    if ($NonInteractive -or -not [System.Environment]::UserInteractive) { return "keep" }
     Show-Diff -Source $Source -Target $Target
     Write-Host ""
     Write-Host "Target exists: $Target"
@@ -190,10 +153,7 @@ function Select-Action([string]$Source, [string]$Target) {
     while ($true) {
         try {
             $choice = (Read-Host "Choose action [R/M/K]").Trim().ToLowerInvariant()
-        } catch {
-            # Read-Host failed (non-interactive host) — keep local
-            return "keep"
-        }
+        } catch { return "keep" }
         switch ($choice) {
             "r" { return "replace" }
             "m" { return "merge" }
@@ -208,19 +168,16 @@ function Deploy-File([string]$SourceFile, [string]$TargetFile) {
         Write-Warn "Skip missing source file: $SourceFile"
         return
     }
-
     if (-not (Test-Path -LiteralPath $TargetFile)) {
         New-Link -Source $SourceFile -Target $TargetFile
         return
     }
-
     $sourceAbs = Get-AbsPath $SourceFile
     $linkedTarget = Resolve-LinkTarget -Path $TargetFile
     if ($linkedTarget -and ((Get-AbsPath $linkedTarget) -eq $sourceAbs)) {
         Write-Host "[=] Already linked: $TargetFile"
         return
     }
-
     $action = Select-Action -Source $SourceFile -Target $TargetFile
     switch ($action) {
         "replace" {
@@ -231,24 +188,18 @@ function Deploy-File([string]$SourceFile, [string]$TargetFile) {
             [void](Backup-Existing -Path $TargetFile)
             Write-MergedConflictFile -Source $SourceFile -Target $TargetFile
         }
-        "keep" {
-            Write-Host "[=] Keep local: $TargetFile"
-        }
-        default {
-            throw "Unsupported action: $action"
-        }
+        "keep" { Write-Host "[=] Keep local: $TargetFile" }
+        default { throw "Unsupported action: $action" }
     }
 }
 
 function Deploy-Entry([string]$SourceRel, [string]$TargetRel) {
     $sourcePath = Join-Path $RepoRoot $SourceRel
     $targetPath = Join-Path $HomeDir $TargetRel
-
     if (-not (Test-Path -LiteralPath $sourcePath)) {
         Write-Warn "Skip (source missing): $SourceRel"
         return
     }
-
     if (Test-Path -LiteralPath $sourcePath -PathType Container) {
         Write-Step "Deploy directory: $SourceRel -> $TargetRel"
         Get-ChildItem -LiteralPath $sourcePath -Recurse -File | ForEach-Object {
@@ -268,19 +219,11 @@ function Parse-Manifest([string]$Path) {
     foreach ($line in Get-Content -LiteralPath $Path) {
         $trimmed = $line.Trim()
         if ([string]::IsNullOrWhiteSpace($trimmed)) { continue }
-        
         if ($trimmed.StartsWith("#")) {
-            if ($trimmed -match "@category\s+(\S+)") {
-                $currentCategory = $Matches[1].Trim()
-            }
+            if ($trimmed -match "@category\s+(\S+)") { $currentCategory = $Matches[1].Trim() }
             continue
         }
-
-        # Filter by category if requested
-        if ($Category.Count -gt 0 -and $currentCategory -notin $Category) {
-            continue
-        }
-
+        if ($Category.Count -gt 0 -and $currentCategory -notin $Category) { continue }
         $parts = $trimmed.Split("|", 2)
         if ($parts.Count -ne 2) {
             Write-Warn "Invalid manifest line: $line"
@@ -296,53 +239,21 @@ function Parse-Manifest([string]$Path) {
 }
 
 function Ensure-Dependency([string]$CommandName, [string]$WingetId) {
-    if (Get-Command $CommandName -ErrorAction SilentlyContinue) {
-        return $true
-    }
+    if (Get-Command $CommandName -ErrorAction SilentlyContinue) { return $true }
     if (-not $InstallDeps) {
-        Write-Warn "$CommandName not found — skipping (pass -InstallDeps to auto-install via winget)."
+        Write-Warn "$CommandName not found  skipping (pass -InstallDeps to auto-install via winget)."
         return $false
     }
-
     if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
-        Write-Warn "$CommandName missing and winget is unavailable. Install $CommandName manually."
+        Write-Warn "$CommandName missing and winget is unavailable."
         return $false
     }
-
-    Invoke-Exec { winget install --id $WingetId -e --source winget --accept-package-agreements --accept-source-agreements } "Install dependency via winget: $WingetId"
+    Invoke-Exec { winget install --id $WingetId -e --source winget --accept-package-agreements --accept-source-agreements } "Install dependency: $WingetId"
     return [bool](Get-Command $CommandName -ErrorAction SilentlyContinue)
 }
 
 function Ensure-GitConfig([string]$HomePath) {
-    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-        return
-    }
-
-    $name = (& git config --global --get user.name) 2>$null
-    $email = (& git config --global --get user.email) 2>$null
-
-    if (-not $name) {
-        if ($NonInteractive) {
-            Write-Warn "git user.name not configured. Set it manually."
-        } else {
-            $newName = Read-Host "git user.name is empty. Enter your name (or leave empty to skip)"
-            if ($newName) {
-                Invoke-Exec { git config --global user.name $newName } "Set git user.name"
-            }
-        }
-    }
-
-    if (-not $email) {
-        if ($NonInteractive) {
-            Write-Warn "git user.email not configured. Set it manually."
-        } else {
-            $newEmail = Read-Host "git user.email is empty. Enter your email (or leave empty to skip)"
-            if ($newEmail) {
-                Invoke-Exec { git config --global user.email $newEmail } "Set git user.email"
-            }
-        }
-    }
-
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) { return }
     $excludesPath = Join-Path $HomePath ".gitignore_global"
     $hooksPath = Join-Path $HomePath ".githooks"
     Invoke-Exec { git config --global core.excludesfile $excludesPath } "Set git core.excludesfile -> $excludesPath"
@@ -350,22 +261,19 @@ function Ensure-GitConfig([string]$HomePath) {
 }
 
 function Invoke-AutoBackup {
-    if (-not (Test-Path -LiteralPath $BackupScriptPath -PathType Leaf)) {
-        throw "Backup script not found: $BackupScriptPath"
-    }
-
+    if (-not (Test-Path -LiteralPath $BackupScriptPath -PathType Leaf)) { throw "Backup script not found: $BackupScriptPath" }
     Write-Step "Creating automatic pre-install backup"
-    if ($DryRun) {
-        & $BackupScriptPath -RepoRoot $RepoRoot -HomeDir $HomeDir -BackupName "install-$TimeStamp" -DryRun
-    } else {
-        & $BackupScriptPath -RepoRoot $RepoRoot -HomeDir $HomeDir -BackupName "install-$TimeStamp"
+    $backupParams = @{
+        RepoRoot = $RepoRoot
+        HomeDir = $HomeDir
+        BackupName = "install-$TimeStamp"
     }
+    if ($DryRun) { $backupParams["DryRun"] = $true }
+    & $BackupScriptPath @backupParams
 }
 
 Write-Step "Repo root: $RepoRoot"
-if (-not (Test-Path -LiteralPath $ManifestPath)) {
-    throw "Manifest not found: $ManifestPath"
-}
+if (-not (Test-Path -LiteralPath $ManifestPath)) { throw "Manifest not found: $ManifestPath" }
 
 Invoke-AutoBackup
 
@@ -380,53 +288,8 @@ foreach ($entry in $entries) {
     Deploy-Entry -SourceRel $entry.Source -TargetRel $entry.Target
 }
 
-function Ensure-CommitPolicy {
-    if (-not (Get-Command git -ErrorAction SilentlyContinue)) { return }
-    $marker = Join-Path $RepoRoot ".ai-agent-config-repo"
-    if (Test-Path -LiteralPath $marker -PathType Leaf) {
-        Invoke-Exec { git config ai-agent.allow-config-commits true } "Marking repo as canonical AI config repo (allows AI file commits)"
-    }
-}
-
-function Ensure-CodexLocalTrust {
-    # Set trust_repository = true in the local config if not present
-    $localConfig = Join-Path $RepoRoot ".codex/config.toml"
-    if (Test-Path -LiteralPath $localConfig -PathType Leaf) {
-        $content = Get-Content -LiteralPath $localConfig -Raw
-        if ($content -notmatch "trust_repository\s*=\s*true") {
-            Invoke-Exec { Add-Content $localConfig "`ntrust_repository = true" } "Trusting repository in local Codex config"
-        }
-    }
-}
-
-function Ensure-CodexGlobalTrust {
-    $globalConfig = Join-Path $HomeDir ".codex/config.toml"
-    # Codex canonicalizes paths with \\?\ prefix on Windows
-    $rawPath = (Resolve-Path -LiteralPath $RepoRoot).Path
-    if (-not $rawPath.StartsWith("\\?\")) {
-        $rawPath = "\\?\$rawPath"
-    }
-    $tomlHeader = "[projects.'$rawPath']"
-    $trustLine = 'trust_level = "trusted"'
-
-    if (-not (Test-Path -LiteralPath $globalConfig)) {
-        Ensure-ParentDir $globalConfig
-        $initContent = "approval_policy = `"never`"`nsandbox_mode = `"workspace-write`"`n`n$tomlHeader`n$trustLine`n"
-        Invoke-Exec { Set-Content $globalConfig $initContent } "Initialize Codex global trust"
-        return
-    }
-
-    $content = Get-Content -LiteralPath $globalConfig -Raw
-    if ($content -notmatch [regex]::Escape($rawPath)) {
-        Invoke-Exec { Add-Content $globalConfig "`n$tomlHeader`n$trustLine`n" } "Add project to Codex global projects trust"
-    }
-}
-
 if ($gitOk) {
     Ensure-GitConfig -HomePath $HomeDir
-    Ensure-CommitPolicy
-    Ensure-CodexLocalTrust
-    Ensure-CodexGlobalTrust
 }
 
-Write-Step "Done."
+Write-Host "[*] Done."
