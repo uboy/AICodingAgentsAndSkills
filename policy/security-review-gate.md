@@ -1,6 +1,18 @@
 # Security Review Gate
 
-This gate is mandatory for script/config/policy changes before completion.
+This gate is the **primary orchestrator** for all pre-completion checks. It is mandatory for script/config/policy changes.
+
+## Hierarchy and Relationships
+
+The security gate operates hierarchically:
+- **`security-review-gate`**: Entry point; coordinates all specialized gates below.
+  - **`change-control-gate`**: Enforces scope, docs contract, and review report existence.
+    - **`validate-review-report`**: Specialized validator for review report structure and quality.
+  - **`validate-cycle-proof`**: Enforces contract compliance and iteration limits.
+  - **`validate-coordination`**: Validates handoff and state artifacts.
+  - **`run-integrity-fast`**: Cross-OS and cross-system consistency checks.
+
+*Note: Some checks (like Independent Review) are intentionally redundant across specialized gates to ensure fail-fast safety even when gates are run in isolation.*
 
 ## Required Command
 

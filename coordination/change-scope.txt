@@ -1,18 +1,16 @@
-# Active scope for task: T-20260305-audit-fixes
-# Fix deep-audit findings for scripts logic, docs contract alignment, and gate robustness
+# Active scope for task: T-20260310-110942
+# Fix deployment manifest and resolve security-review-gate hierarchy confusion
 
-AGENTS.md
-AGENTS-*.md
+deploy/manifest.txt
+policy/security-review-gate.md
 README.md
-policy/*.md
-scripts/*.ps1
-scripts/*.sh
+scripts/validate-review-report.ps1
+scripts/validate-cycle-proof.ps1
+scripts/security-review-gate.ps1
+scripts/validate-coordination.ps1
 coordination/change-scope.txt
 coordination/cycle-contract.json
-coordination/reviews/T-20260305-audit-fixes.md
-coordination/handoffs/T-20260305-audit-fixes-codex.md
 coordination/tasks.jsonl
-coordination/state/codex.md
-.codex/AGENTS.md
-.cursor/rules/*.mdc
-.agent-memory/**
+coordination/state/opencode.md
+coordination/reviews/T-20260310-110942.md
+coordination/handoffs/T-20260310-110942-opencode.md

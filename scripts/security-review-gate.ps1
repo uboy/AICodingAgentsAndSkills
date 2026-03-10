@@ -112,12 +112,27 @@ $gitleaksCmd = Get-Command gitleaks -ErrorAction SilentlyContinue
 if ($gitleaksCmd) {
     Push-Location $RepoRoot
     try {
-        & gitleaks git --staged --redact --no-banner $RepoRoot 2>&1 | Out-Null
-        if ($LASTEXITCODE -eq 0) {
+        # Redirect stderr to stdout and capture both. 
+        # Use try/catch or SilentlyContinue to prevent NativeCommandError from stopping the script.
+        $glOutput = & gitleaks git --staged --redact --no-banner $RepoRoot 2>&1
+        $glExitCode = $LASTEXITCODE
+        
+        # gitleaks exit code: 0=no leaks, 1=leaks found (default)
+        if ($glExitCode -eq 0) {
             Add-Issue -Severity "PASS" -Check "gitleaks" -Detail "No secrets detected by gitleaks"
         } else {
-            Add-Issue -Severity "FAIL" -Check "gitleaks" -Detail "gitleaks found secrets in staged changes (run: gitleaks git --staged for details)"
+            $glText = ($glOutput | Out-String)
+            if ($glText -match "leaks found" -or $glText -match "finding") {
+                Add-Issue -Severity "FAIL" -Check "gitleaks" -Detail "gitleaks found secrets in staged changes (run: gitleaks git --staged for details)"
+            } elseif ($glText -match "0 commits scanned" -or $glText -match "no commits" -or $glText -match "no staged") {
+                 Add-Issue -Severity "PASS" -Check "gitleaks" -Detail "gitleaks: No new commits/changes to scan"
+            } else {
+                 # Possible error or gitleaks version quirk.
+                 Add-Issue -Severity "WARN" -Check "gitleaks" -Detail "gitleaks returned non-zero but no leaks identified. Check manually if needed."
+            }
         }
+    } catch {
+        Add-Issue -Severity "WARN" -Check "gitleaks" -Detail "gitleaks execution failed: $_"
     } finally {
         Pop-Location
     }

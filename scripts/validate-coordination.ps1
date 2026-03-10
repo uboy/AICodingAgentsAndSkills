@@ -47,7 +47,7 @@ foreach ($filePath in $files) {
     }
 
     if ($missing.Count -gt 0) {
-        Write-Error "FAIL: $relPath is missing required sections: $($missing -join ', ')"
+        Write-Host ("FAIL: {0} is missing required sections: {1}" -f $relPath, ($missing -join ", ")) -ForegroundColor Red
         $failCount++
         continue
     }
@@ -56,18 +56,18 @@ foreach ($filePath in $files) {
     if ($verificationMatch.Success) {
         $verificationBody = $verificationMatch.Groups[1].Value.Trim()
         if (-not $verificationBody -or $verificationBody -match "<command" -or $verificationBody -match "(?i)\btodo\b") {
-            Write-Error "FAIL: $relPath has empty or placeholder ## Verification section."
+            Write-Host "FAIL: $relPath has empty or placeholder ## Verification section." -ForegroundColor Red
             $failCount++
         }
     } else {
-        Write-Error "FAIL: $relPath could not parse ## Verification section body."
+        Write-Host "FAIL: $relPath could not parse ## Verification section body." -ForegroundColor Red
         $failCount++
     }
 
     $hasDelivery = [regex]::IsMatch($content, '(?m)^## Delivery Contract\s*$')
     $hasCommit = [regex]::IsMatch($content, '(?m)^## Commit Message\s*$')
     if (-not ($hasDelivery -or $hasCommit)) {
-        Write-Error "FAIL: $relPath is missing ## Delivery Contract or ## Commit Message section."
+        Write-Host "FAIL: $relPath is missing ## Delivery Contract or ## Commit Message section." -ForegroundColor Red
         $failCount++
         continue
     }
@@ -76,11 +76,11 @@ foreach ($filePath in $files) {
     if ($commitMatch.Success) {
         $commitBody = $commitMatch.Groups[1].Value.Trim()
         if (-not $commitBody -or $commitBody -match "(?i)\btodo\b" -or $commitBody -match "<message>") {
-            Write-Error "FAIL: $relPath has empty or placeholder delivery/commit section."
+            Write-Host "FAIL: $relPath has empty or placeholder delivery/commit section." -ForegroundColor Red
             $failCount++
         }
     } else {
-        Write-Error "FAIL: $relPath could not parse delivery/commit section body."
+        Write-Host "FAIL: $relPath could not parse delivery/commit section body." -ForegroundColor Red
         $failCount++
     }
 }

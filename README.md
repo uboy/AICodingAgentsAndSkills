@@ -333,14 +333,22 @@ Exit codes:
 
 ## Security Review Gate
 
-Policy:
+This gate is the **primary orchestrator** for all pre-completion checks, coordinating specialized validators for scope, documentation, reports, and consistency.
 
+Policy:
 - `policy/security-review-gate.md`
 
-Gate scripts:
+Hierarchy:
+- `security-review-gate`: Entry point orchestrator.
+  - `change-control-gate`: Scope and docs contract.
+    - `validate-review-report`: Review report structure.
+  - `validate-cycle-proof`: Contract and limits.
+  - `run-integrity-fast`: System consistency.
 
+Commands:
 - Windows 11: `scripts/security-review-gate.ps1`
 - Linux/macOS: `scripts/security-review-gate.sh`
+
 
 Run:
 
