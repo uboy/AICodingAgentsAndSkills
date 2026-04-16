@@ -1,0 +1,14 @@
+{
+  "_comment": "Subscription limit monitoring configuration. See policy/subscription-limits-policy.md for full spec.",
+  "_updated": "2026-04-14",
+
+  "subscription_limit_tokens": 200000,
+  "warning_threshold_pct": 0.80,
+  "critical_threshold_pct": 0.90,
+  "auto_resume": false,
+
+  "token_spend_gate": {
+    "enabled": false,
+    "threshold_tokens": 1000000
+  }
+}

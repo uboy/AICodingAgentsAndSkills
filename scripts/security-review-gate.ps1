@@ -1,0 +1,292 @@
+param(
+    [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+function Git-Out([string[]]$GitArgs) {
+    $oldEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    $out = & git.exe -C $RepoRoot @GitArgs 2>&1
+    $code = $LASTEXITCODE
+    $ErrorActionPreference = $oldEAP
+    return [PSCustomObject]@{
+        ExitCode = $code
+        Lines = @($out)
+    }
+}
+
+$inside = Git-Out -GitArgs @("rev-parse", "--is-inside-work-tree")
+if ($inside.ExitCode -ne 0) {
+    throw "Not a git repository: $RepoRoot"
+}
+
+$headCheck = Git-Out -GitArgs @("rev-parse", "--verify", "HEAD")
+if ($headCheck.ExitCode -eq 0) {
+    $diffA = Git-Out -GitArgs @("diff", "--name-only", "--diff-filter=ACMRTUXB", "HEAD")
+    $diffB = Git-Out -GitArgs @("diff", "--cached", "--name-only", "--diff-filter=ACMRTUXB")
+    $diffC = Git-Out -GitArgs @("ls-files", "--others", "--exclude-standard")
+} else {
+    $diffA = Git-Out -GitArgs @("ls-files", "--others", "--modified", "--exclude-standard")
+    $diffB = Git-Out -GitArgs @("diff", "--cached", "--name-only", "--diff-filter=ACMRTUXB")
+    $diffC = [PSCustomObject]@{ ExitCode = 0; Lines = @() }
+}
+
+$changed = @(
+    $diffA.Lines + $diffB.Lines + $diffC.Lines |
+    ForEach-Object { "$_" } |
+    Where-Object {
+        -not [string]::IsNullOrWhiteSpace($_) -and
+        -not $_.StartsWith("fatal:") -and
+        -not $_.StartsWith("warning:")
+    } |
+    Select-Object -Unique
+)
+
+$issues = New-Object System.Collections.Generic.List[object]
+$failCount = 0
+$warnCount = 0
+
+function Add-Issue([string]$Severity, [string]$Check, [string]$Detail) {
+    $issues.Add([PSCustomObject]@{
+        Severity = $Severity
+        Check = $Check
+        Detail = $Detail
+    })
+    if ($Severity -eq "FAIL") { $script:failCount++ }
+    if ($Severity -eq "WARN") { $script:warnCount++ }
+}
+
+function Test-BashRuntimeLimitation([string]$BashText, [int]$ExitCode) {
+    return (
+        $BashText -match "couldn't create signal pipe|Win32 error 5|Access is denied" -or
+        $ExitCode -eq -1073741502
+    )
+}
+
+if ($changed.Count -eq 0) {
+    Add-Issue -Severity "WARN" -Check "changed-files" -Detail "No changed files detected against HEAD."
+}
+
+$secretPattern = '(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*["''][^"'']{8,}["'']|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{20,}'
+$placeholderPattern = '(?i)(example|sample|dummy|test|changeme|<token>|<secret>|<password>)'
+$mergeCheckSkip = @("scripts/install.sh", "scripts/install.ps1")
+
+$skillsChanged = $false
+
+foreach ($rel in $changed) {
+    $path = Join-Path $RepoRoot $rel
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        continue
+    }
+
+    if ($rel -like "skills/*") {
+        $skillsChanged = $true
+    }
+
+    if ($rel -notin $mergeCheckSkip) {
+        $mergeHit = Select-String -Path $path -Pattern '^(<<<<<<<|=======|>>>>>>>)' -SimpleMatch:$false -ErrorAction SilentlyContinue
+        if ($mergeHit) {
+            Add-Issue -Severity "FAIL" -Check "merge-markers" -Detail "Conflict markers found in $rel"
+        }
+    }
+
+    # Speed optimization: skip secret scan for Markdown/Docs
+    if ($rel.EndsWith(".md")) {
+        continue
+    }
+
+    $secretHits = Select-String -Path $path -Pattern $secretPattern -ErrorAction SilentlyContinue
+    foreach ($hit in $secretHits) {
+        if ($hit.Line -notmatch $placeholderPattern) {
+            Add-Issue -Severity "FAIL" -Check "secret-scan" -Detail ("Possible secret in {0}:{1}" -f $rel, $hit.LineNumber)
+        }
+    }
+
+    if ($rel.EndsWith(".ps1")) {
+        $errors = $null
+        $tokens = $null
+        [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $path), [ref]$tokens, [ref]$errors)
+        if ($errors.Count -gt 0) {
+            Add-Issue -Severity "FAIL" -Check "ps-parse" -Detail ("PowerShell parse errors in {0}" -f $rel)
+        }
+    }
+}
+
+# Gitleaks (deep secret scan -- complements regex-based secret-scan above)
+$gitleaksCmd = Get-Command gitleaks -ErrorAction SilentlyContinue
+if ($gitleaksCmd) {
+    Push-Location $RepoRoot
+    try {
+        # Redirect stderr to stdout and capture both. 
+        # Use try/catch or SilentlyContinue to prevent NativeCommandError from stopping the script.
+        $glOutput = & gitleaks git --staged --redact --no-banner $RepoRoot 2>&1
+        $glExitCode = $LASTEXITCODE
+        
+        # gitleaks exit code: 0=no leaks, 1=leaks found (default)
+        if ($glExitCode -eq 0) {
+            Add-Issue -Severity "PASS" -Check "gitleaks" -Detail "No secrets detected by gitleaks"
+        } else {
+            $glText = ($glOutput | Out-String)
+            if ($glText -match "leaks found" -or $glText -match "finding") {
+                Add-Issue -Severity "FAIL" -Check "gitleaks" -Detail "gitleaks found secrets in staged changes (run: gitleaks git --staged for details)"
+            } elseif ($glText -match "0 commits scanned" -or $glText -match "no commits" -or $glText -match "no staged") {
+                 Add-Issue -Severity "PASS" -Check "gitleaks" -Detail "gitleaks: No new commits/changes to scan"
+            } else {
+                 # Possible error or gitleaks version quirk.
+                 Add-Issue -Severity "WARN" -Check "gitleaks" -Detail "gitleaks returned non-zero but no leaks identified. Check manually if needed."
+            }
+        }
+    } catch {
+        Add-Issue -Severity "WARN" -Check "gitleaks" -Detail "gitleaks execution failed: $_"
+    } finally {
+        Pop-Location
+    }
+} else {
+    Add-Issue -Severity "WARN" -Check "gitleaks" -Detail "gitleaks not installed -- install: winget install gitleaks.gitleaks (Windows) or brew install gitleaks (macOS/Linux)"
+}
+
+$coordinationChanged = @($changed | Where-Object { $_ -like "coordination/handoffs/*" -or $_ -like "coordination/state/*" })
+if ($coordinationChanged.Count -gt 0) {
+    $validateCoordScript = Join-Path $RepoRoot "scripts/validate-coordination.ps1"
+    if (Test-Path -LiteralPath $validateCoordScript -PathType Leaf) {
+        & pwsh -NoProfile -File $validateCoordScript -RepoRoot $RepoRoot -FilesToValidate @($coordinationChanged)
+        if ($LASTEXITCODE -ne 0) {
+            Add-Issue -Severity "FAIL" -Check "coordination-validate" -Detail "Coordination artifact validation failed."
+        }
+    } else {
+        Add-Issue -Severity "WARN" -Check "coordination-validate" -Detail "validate-coordination.ps1 not found; skipped."
+    }
+}
+
+$cycleArtifactsChanged = @($changed | Where-Object {
+    $_ -eq "coordination/cycle-contract.json" -or
+    $_ -like "coordination/reviews/*" -or
+    $_ -like "coordination/handoffs/*"
+}).Count -gt 0
+
+$shFiles = @($changed | Where-Object { "$_".EndsWith(".sh") })
+if ($shFiles.Count -gt 0) {
+    $bash = Get-Command bash -ErrorAction SilentlyContinue
+    if (-not $bash -and (Test-Path "C:\Program Files\Git\bin\bash.exe")) {
+        $bash = Get-Item "C:\Program Files\Git\bin\bash.exe"
+    }
+
+    if (-not $bash) {
+        Add-Issue -Severity "WARN" -Check "bash-parse" -Detail "bash not available; skipped .sh syntax checks."
+    } else {
+        $bashEnvIssueReported = $false
+        foreach ($rel in $shFiles) {
+            $path = Join-Path $RepoRoot $rel
+            $cmd = if ($bash -is [System.Management.Automation.CommandInfo]) { $bash.Source } else { $bash.FullName }
+            $bashOutput = & $cmd -n $path 2>&1
+            $bashExitCode = $LASTEXITCODE
+            if ($bashExitCode -ne 0) {
+                $bashText = ($bashOutput | Out-String)
+                if (Test-BashRuntimeLimitation -BashText $bashText -ExitCode $bashExitCode) {
+                    if (-not $bashEnvIssueReported) {
+                        Add-Issue -Severity "WARN" -Check "bash-parse" -Detail "bash exists but cannot run in current runtime (permission/sandbox limitation); skipped .sh syntax checks."
+                        $bashEnvIssueReported = $true
+                    }
+                } else {
+                    Add-Issue -Severity "FAIL" -Check "bash-parse" -Detail ("bash -n failed for {0}" -f $rel)
+                }
+            }
+        }
+    }
+}
+
+if ($skillsChanged) {
+    $validateScript = Join-Path $RepoRoot "scripts/validate-skills.ps1"
+    if (Test-Path -LiteralPath $validateScript -PathType Leaf) {
+        & pwsh -NoProfile -File $validateScript
+        if ($LASTEXITCODE -ne 0) {
+            Add-Issue -Severity "FAIL" -Check "skills-validate" -Detail "Skill validation failed."
+        }
+    } else {
+        Add-Issue -Severity "WARN" -Check "skills-validate" -Detail "validate-skills.ps1 not found; skipped."
+    }
+}
+
+$integrityScript = Join-Path $RepoRoot "scripts/run-integrity-fast.ps1"
+if (Test-Path -LiteralPath $integrityScript -PathType Leaf) {
+    & $integrityScript -RepoRoot $RepoRoot
+    if ($LASTEXITCODE -ne 0) {
+        Add-Issue -Severity "FAIL" -Check "integrity-fast" -Detail "run-integrity-fast.ps1 failed."
+    }
+} else {
+    Add-Issue -Severity "FAIL" -Check "integrity-fast" -Detail "scripts/run-integrity-fast.ps1 not found."
+}
+
+$changeControlScript = Join-Path $RepoRoot "scripts/change-control-gate.ps1"
+if (Test-Path -LiteralPath $changeControlScript -PathType Leaf) {
+    & $changeControlScript -RepoRoot $RepoRoot
+    if ($LASTEXITCODE -ne 0) {
+        Add-Issue -Severity "FAIL" -Check "change-control" -Detail "change-control-gate.ps1 failed."
+    } else {
+        Add-Issue -Severity "PASS" -Check "change-control" -Detail "change-control-gate.ps1 passed."
+    }
+} else {
+    Add-Issue -Severity "FAIL" -Check "change-control" -Detail "scripts/change-control-gate.ps1 not found."
+}
+
+$cycleProofScript = Join-Path $RepoRoot "scripts/validate-cycle-proof.ps1"
+if ($cycleArtifactsChanged -and (Test-Path -LiteralPath $cycleProofScript -PathType Leaf)) {
+    & $cycleProofScript -RepoRoot $RepoRoot
+    if ($LASTEXITCODE -ne 0) {
+        Add-Issue -Severity "FAIL" -Check "cycle-proof" -Detail "validate-cycle-proof.ps1 failed."
+    } else {
+        Add-Issue -Severity "PASS" -Check "cycle-proof" -Detail "validate-cycle-proof.ps1 passed."
+    }
+} elseif ($cycleArtifactsChanged) {
+    Add-Issue -Severity "FAIL" -Check "cycle-proof" -Detail "scripts/validate-cycle-proof.ps1 not found."
+} else {
+    Add-Issue -Severity "PASS" -Check "cycle-proof" -Detail "No local cycle-proof artifacts changed; skipped."
+}
+
+# Cross-platform cycle-proof check
+$cycleProofSh = Join-Path $RepoRoot "scripts/validate-cycle-proof.sh"
+if ($cycleArtifactsChanged -and (Test-Path -LiteralPath $cycleProofSh -PathType Leaf)) {
+    $bash = Get-Command bash -ErrorAction SilentlyContinue
+    if (-not $bash -and (Test-Path "C:\Program Files\Git\bin\bash.exe")) {
+        $bash = Get-Item "C:\Program Files\Git\bin\bash.exe"
+    }
+    if ($bash) {
+        $cmd = if ($bash -is [System.Management.Automation.CommandInfo]) { $bash.Source } else { $bash.FullName }
+        $cycleOutput = & $cmd $cycleProofSh --repo-root $RepoRoot 2>&1
+        $cycleExitCode = $LASTEXITCODE
+        if ($cycleExitCode -ne 0) {
+            $cycleText = ($cycleOutput | Out-String)
+            if (Test-BashRuntimeLimitation -BashText $cycleText -ExitCode $cycleExitCode) {
+                Add-Issue -Severity "WARN" -Check "cycle-proof-sh" -Detail "bash exists but cannot run in current runtime (permission/sandbox limitation); skipped validate-cycle-proof.sh cross-platform check."
+            } else {
+                Add-Issue -Severity "FAIL" -Check "cycle-proof-sh" -Detail "validate-cycle-proof.sh failed (cross-platform check)."
+            }
+        } else {
+            Add-Issue -Severity "PASS" -Check "cycle-proof-sh" -Detail "validate-cycle-proof.sh passed (cross-platform check)."
+        }
+    } else {
+        Add-Issue -Severity "WARN" -Check "cycle-proof-sh" -Detail "bash not available; skipped validate-cycle-proof.sh cross-platform check."
+    }
+} elseif (-not $cycleArtifactsChanged) {
+    Add-Issue -Severity "PASS" -Check "cycle-proof-sh" -Detail "No local cycle-proof artifacts changed; skipped cross-platform cycle-proof check."
+}
+
+if ($issues.Count -eq 0) {
+    Add-Issue -Severity "PASS" -Check "gate" -Detail "No issues detected."
+}
+
+Write-Host ""
+Write-Host "Security review gate report"
+Write-Host "Repo: $RepoRoot"
+Write-Host "Changed files: $($changed.Count)"
+Write-Host ""
+$issues | Format-Table -AutoSize Severity, Check, Detail
+Write-Host ""
+Write-Host ("Summary: PASS={0} WARN={1} FAIL={2}" -f (@($issues | Where-Object Severity -eq "PASS").Count), $warnCount, $failCount)
+
+if ($failCount -gt 0) {
+    exit 1
+}
+exit 0

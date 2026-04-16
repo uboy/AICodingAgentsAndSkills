@@ -1,0 +1,8 @@
+{
+  "_comment": "Optional local override file. Copy to coordination/approval-overrides.json only when the user explicitly approved an exception.",
+  "allow_existing_test_modifications": false,
+  "allow_architecture_changes": false,
+  "allow_large_changes": false,
+  "approved_by": "",
+  "reason": ""
+}

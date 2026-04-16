@@ -1,0 +1,59 @@
+{
+  "id": "T-000",
+  "title": "Task title",
+  "owner": "codex",
+  "status": "todo",
+  "priority": "medium",
+  "depends_on": [],
+  "inputs": [],
+  "outputs": [],
+  "checklist": [
+    {
+      "id": "C-1",
+      "text": "Execute one micro-step and verify acceptance",
+      "status": "todo"
+    },
+    {
+      "id": "C-2",
+      "text": "Run compile/run/tests verification",
+      "status": "todo"
+    },
+    {
+      "id": "C-3",
+      "text": "Update docs and run security gate",
+      "status": "todo"
+    }
+  ],
+  "profile": "weak_model",
+  "objective": "One concrete, testable outcome.",
+  "step_contracts": [
+    {
+      "step_id": "S-1",
+      "action": "Do one small operation.",
+      "acceptance": [
+        "Exact expected result for this step."
+      ],
+      "stop_if_failed": true
+    }
+  ],
+  "output_schema": {
+    "summary": "string",
+    "changed_files": [
+      "path"
+    ],
+    "verification": [
+      {
+        "command": "string",
+        "result": "pass|fail|blocked"
+      }
+    ],
+    "open_questions": [
+      "string"
+    ]
+  },
+  "uncertainty_policy": {
+    "max_assumptions": 0,
+    "require_user_confirmation_on_ambiguity": true
+  },
+  "updated_at": "2026-01-01T00:00:00Z"
+}

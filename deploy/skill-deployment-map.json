@@ -1,0 +1,63 @@
+{
+  "systems": {
+    "claude": {
+      "runtime_dir": ".claude/skills/local",
+      "library_dir": ".claude/skill-library/local"
+    },
+    "codex": {
+      "runtime_dir": ".codex/skills/local",
+      "library_dir": ".codex/skill-library/local"
+    },
+    "gemini": {
+      "runtime_dir": ".gemini/extensions/ai-coding-agents/skills",
+      "library_dir": ".gemini/extensions/ai-coding-agents/skill-library"
+    },
+    "cursor": {
+      "runtime_dir": ".cursor/skills/local",
+      "library_dir": ".cursor/skill-library/local"
+    },
+    "opencode": {
+      "runtime_dir": ".config/opencode/skills/local",
+      "library_dir": ".config/opencode/skill-library/local"
+    }
+  },
+  "always_on": [
+    "agent-system-coach",
+    "code-review",
+    "lecture-transcript",
+    "meeting-notes",
+    "text-cleanup"
+  ],
+  "library_only": [
+    "android-code-review",
+    "api-contract-review",
+    "build-system-analysis",
+    "ci-failure-debugger",
+    "gitcode-pr-review",
+    "gitcode-pr-workflow",
+    "homework-management",
+    "ios-code-review",
+    "java-code-review",
+    "large-codebase-context",
+    "openharmony-task-specifier",
+    "performance-review",
+    "security-review",
+    "task-progress",
+    "task-specifier",
+    "text-humanize"
+  ],
+  "deprecated": [
+    "gitcode-pr-issue"
+  ],
+  "support": {
+    "runtime": [
+      "skills/_shared"
+    ],
+    "library": [
+      "skills/_shared",
+      "skills/_template",
+      "skills/QUALITY-STANDARD.md",
+      "skills/README.md"
+    ]
+  }
+}

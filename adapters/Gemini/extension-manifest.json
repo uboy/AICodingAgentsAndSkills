@@ -1,0 +1,10 @@
+{
+  "extensions": [
+    {
+      "id": "ai-coding-agents",
+      "name": "AI Coding Agents",
+      "description": "Shared AI coding agents and skills",
+      "version": "1.0.0"
+    }
+  ]
+}

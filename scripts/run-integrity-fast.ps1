@@ -1,0 +1,225 @@
+param(
+    [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+$failCount = 0
+$warnCount = 0
+
+function Add-Result([string]$Severity, [string]$Check, [string]$Detail) {
+    Write-Host ("{0} {1} {2}" -f $Severity, $Check, $Detail)
+    if ($Severity -eq "FAIL") { $script:failCount++ }
+    if ($Severity -eq "WARN") { $script:warnCount++ }
+}
+
+function Get-GitChangedFiles([string]$Root) {
+    $git = Get-Command git -ErrorAction SilentlyContinue
+    if (-not $git) { return @() }
+
+    $oldEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+
+    & git.exe -C $Root rev-parse --is-inside-work-tree 2>$null
+    if ($LASTEXITCODE -ne 0) { 
+        $ErrorActionPreference = $oldEAP
+        return @() 
+    }
+
+    & git.exe -C $Root rev-parse --verify HEAD 2>$null
+    $hasHead = ($LASTEXITCODE -eq 0)
+
+    $all = New-Object System.Collections.Generic.List[string]
+    if ($hasHead) {
+        $unstaged = & git.exe -C $Root diff --name-only --diff-filter=ACMRTUXB HEAD 2>$null
+        $staged = & git.exe -C $Root diff --cached --name-only --diff-filter=ACMRTUXB 2>$null
+        foreach ($line in @($unstaged) + @($staged)) {
+            if (-not [string]::IsNullOrWhiteSpace("$line")) { $all.Add("$line") }
+        }
+    } else {
+        $fallback = & git.exe -C $Root ls-files --others --modified --exclude-standard 2>$null
+        foreach ($line in @($fallback)) {
+            if (-not [string]::IsNullOrWhiteSpace("$line")) { $all.Add("$line") }
+        }
+    }
+
+    $ErrorActionPreference = $oldEAP
+    return @($all | Select-Object -Unique)
+}
+
+function Get-RelativePathCompat([string]$BasePath, [string]$TargetPath) {
+    $method = [System.IO.Path].GetMethod("GetRelativePath", [Type[]]@([string], [string]))
+    if ($method) {
+        return [System.IO.Path]::GetRelativePath($BasePath, $TargetPath)
+    }
+
+    $base = (Resolve-Path -LiteralPath $BasePath).Path
+    $target = (Resolve-Path -LiteralPath $TargetPath).Path
+    $baseUri = New-Object System.Uri(($base.TrimEnd('\') + '\'))
+    $targetUri = New-Object System.Uri($target)
+    return [System.Uri]::UnescapeDataString($baseUri.MakeRelativeUri($targetUri).ToString()).Replace('/', '\')
+}
+
+function Get-PythonCommand() {
+    foreach ($name in @("python", "py")) {
+        $cmd = Get-Command $name -ErrorAction SilentlyContinue
+        if ($cmd) { return $cmd }
+    }
+    return $null
+}
+
+function Test-TomlFile([string]$Path) {
+    $python = Get-PythonCommand
+    if (-not $python) {
+        return [PSCustomObject]@{
+            Success = $false
+            Skipped = $true
+            Detail = "python not available"
+        }
+    }
+
+    $tomlPath = (Resolve-Path -LiteralPath $Path).Path
+    $runner = if ($python.Name -eq "py.exe" -or $python.Name -eq "py") { @("-3", "-c") } else { @("-c") }
+    $script = "import pathlib, tomllib; tomllib.loads(pathlib.Path(r'''$tomlPath''').read_text(encoding='utf-8'))"
+    & $python.Source @runner $script 2>$null
+    return [PSCustomObject]@{
+        Success = ($LASTEXITCODE -eq 0)
+        Skipped = $false
+        Detail = if ($LASTEXITCODE -eq 0) { "ok" } else { "tomllib parse failed" }
+    }
+}
+
+Write-Host "Fast integrity check"
+Write-Host "Repo: $RepoRoot"
+
+# ---------------------------------------------------------------------------
+# Build step: ensure out/ is fresh before validation.
+# ---------------------------------------------------------------------------
+$ExtractScript = Join-Path $RepoRoot "scripts/extract-agents-tier.ps1"
+if (Test-Path $ExtractScript) {
+    & pwsh -NoProfile -File $ExtractScript -OutDir (Join-Path $RepoRoot 'out') | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        Add-Result -Severity "FAIL" -Check "build" -Detail "extract-agents-tier.ps1 failed."
+    } else {
+        Add-Result -Severity "PASS" -Check "build" -Detail "Tier files and adapters generated into out/."
+    }
+}
+
+$parityScript = Join-Path $RepoRoot "scripts/validate-parity.ps1"
+if (-not (Test-Path -LiteralPath $parityScript -PathType Leaf)) {
+    Add-Result -Severity "FAIL" -Check "validate-parity" -Detail "Missing scripts/validate-parity.ps1"
+} else {
+    & $parityScript -RepoRoot $RepoRoot
+    if ($LASTEXITCODE -ne 0) {
+        Add-Result -Severity "FAIL" -Check "validate-parity" -Detail "validate-parity.ps1 failed."
+    }
+}
+
+$changed = Get-GitChangedFiles -Root $RepoRoot
+if ($changed.Count -gt 0) {
+    Add-Result -Severity "PASS" -Check "file-scope" -Detail "Using git-changed files for syntax checks."
+    $psTargets = @($changed | Where-Object { $_ -like "*.ps1" } | ForEach-Object { Join-Path $RepoRoot $_ })
+    $shTargets = @($changed | Where-Object { $_ -like "*.sh" } | ForEach-Object { Join-Path $RepoRoot $_ })
+} else {
+    Add-Result -Severity "WARN" -Check "file-scope" -Detail "Git change scope unavailable; checking all scripts/*.ps1 and scripts/*.sh."
+    $psTargets = @(Get-ChildItem -LiteralPath (Join-Path $RepoRoot "scripts") -File -Filter "*.ps1" | ForEach-Object { $_.FullName })
+    $shTargets = @(Get-ChildItem -LiteralPath (Join-Path $RepoRoot "scripts") -File -Filter "*.sh" | ForEach-Object { $_.FullName })
+}
+
+foreach ($path in $psTargets) {
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
+    $errors = $null
+    $tokens = $null
+    [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $path), [ref]$tokens, [ref]$errors)
+    if ($errors.Count -gt 0) {
+        $rel = Get-RelativePathCompat -BasePath $RepoRoot -TargetPath $path
+        Add-Result -Severity "FAIL" -Check "ps-parse" -Detail ("PowerShell parse errors in {0}" -f $rel)
+    }
+}
+
+$bash = Get-Command bash -ErrorAction SilentlyContinue
+if (-not $bash -and (Test-Path "C:\Program Files\Git\bin\bash.exe")) {
+    $bash = Get-Item "C:\Program Files\Git\bin\bash.exe"
+}
+
+if ($shTargets.Count -gt 0 -and -not $bash) {
+    Add-Result -Severity "WARN" -Check "bash-parse" -Detail "bash not available; unable to run .sh syntax checks."
+} else {
+    $bashEnvIssueReported = $false
+    foreach ($path in $shTargets) {
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
+        $cmd = if ($bash -is [System.Management.Automation.CommandInfo]) { $bash.Source } else { $bash.FullName }
+        $bashOutput = & $cmd -n $path 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            $rel = Get-RelativePathCompat -BasePath $RepoRoot -TargetPath $path
+            $bashText = ($bashOutput | Out-String)
+            if ($bashText -match "couldn't create signal pipe|Win32 error 5|Access is denied") {
+                if (-not $bashEnvIssueReported) {
+                    Add-Result -Severity "WARN" -Check "bash-parse" -Detail "bash exists but cannot run in current runtime (permission/sandbox limitation); skipped .sh syntax checks."
+                    $bashEnvIssueReported = $true
+                }
+            } else {
+                Add-Result -Severity "FAIL" -Check "bash-parse" -Detail ("bash -n failed for {0}" -f $rel)
+            }
+        }
+    }
+}
+
+$jsonFiles = @(
+    "out/opencode.json",
+    "out/.gemini/settings.json"
+)
+foreach ($rel in $jsonFiles) {
+    $path = Join-Path $RepoRoot $rel
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        Add-Result -Severity "FAIL" -Check "json-parse" -Detail ("Missing required JSON file: {0}" -f $rel)
+        continue
+    }
+    try {
+        [void](Get-Content -LiteralPath $path -Raw | ConvertFrom-Json)
+    } catch {
+        Add-Result -Severity "FAIL" -Check "json-parse" -Detail ("Invalid JSON in {0}" -f $rel)
+    }
+}
+
+$tomlFiles = @(
+    "adapters/Codex/config.toml",
+    "out/.codex/config.toml"
+)
+foreach ($rel in $tomlFiles) {
+    $path = Join-Path $RepoRoot $rel
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        Add-Result -Severity "FAIL" -Check "toml-parse" -Detail ("Missing required TOML file: {0}" -f $rel)
+        continue
+    }
+
+    $tomlResult = Test-TomlFile -Path $path
+    if ($tomlResult.Skipped) {
+        Add-Result -Severity "WARN" -Check "toml-parse" -Detail ("Skipped TOML validation for {0}: {1}" -f $rel, $tomlResult.Detail)
+        continue
+    }
+    if (-not $tomlResult.Success) {
+        Add-Result -Severity "FAIL" -Check "toml-parse" -Detail ("Invalid TOML in {0}" -f $rel)
+    }
+}
+
+$requiredDirs = @("policy", "coordination/templates")
+foreach ($rel in $requiredDirs) {
+    $path = Join-Path $RepoRoot $rel
+    if (-not (Test-Path -LiteralPath $path -PathType Container)) {
+        Add-Result -Severity "FAIL" -Check "dir-presence" -Detail ("Missing required directory: {0}" -f $rel)
+    }
+}
+
+if ($failCount -eq 0) {
+    Add-Result -Severity "PASS" -Check "integrity-fast" -Detail "All required fast integrity checks passed."
+}
+
+$passCount = if ($failCount -eq 0) { 1 } else { 0 }
+Write-Host ("Summary: PASS={0} WARN={1} FAIL={2}" -f $passCount, $warnCount, $failCount)
+
+if ($failCount -gt 0) {
+    exit 1
+}
+exit 0

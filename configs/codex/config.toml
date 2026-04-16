@@ -1,0 +1,17 @@
+# Codex Runtime Configuration (Template)
+# 
+# IMPORTANT: This is a TEMPLATE file.
+# Copy to ~/.codex/config.toml or your project-local config and fill in your values.
+# Do NOT commit personal/local codex configs to the repository.
+
+# Global defaults
+# approval_policy valid values: untrusted, on-failure, on-request, granular, never
+approval_policy = "on-request"
+sandbox_mode = "workspace-write"
+trust_repository = true
+project_doc_max_bytes = 65536
+
+# Per-project configuration
+# Uncomment and replace with your actual project path
+# [projects.'YOUR_PROJECT_PATH_HERE']
+# trust_level = "trusted"

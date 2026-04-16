@@ -1,0 +1,3 @@
+{"tool":"shell","command":"git status --short","effect":"read","status":"ok"}
+{"tool":"shell","command":"pwsh -NoProfile -File ./scripts/validate-skills.ps1","effect":"read","status":"ok"}
+{"tool":"shell","command":"git commit -m \"message\"","effect":"write","status":"failed"}

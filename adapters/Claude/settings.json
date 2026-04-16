@@ -1,0 +1,6 @@
+{
+  "model": "claude-3.5-sonnet-20240620",
+  "maxTokens": 200000,
+  "apiProvider": "anthropic",
+  "contextOverflowStrategy": "adaptive"
+}

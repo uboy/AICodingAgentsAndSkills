@@ -1,0 +1,261 @@
+{
+  "_comment": "Configuration for sync-adapters: how to generate system-specific files from repo sources into out/",
+  "_updated": "2026-04-15",
+
+  "systems": {
+    "Claude": {
+      "label": "Claude Code",
+      "system_files": [
+        {
+          "template": "system-adapter.md",
+          "output": "CLAUDE.md",
+          "format": "markdown",
+          "extra_footer": [
+            "Deterministic runtime requirements:",
+            "- This repository is deployment source-of-truth; deployed `CLAUDE.md` must stay aligned in both project and user scopes.",
+            "- If memory layers conflict, apply the strictest rule and prioritize project `AGENTS.md`.",
+            "- After editing adapter files or `agents/*.md`, restart agent session.",
+            "- In new session, run `/memory` and `/agents` to verify expected policy files and agents are loaded.",
+            "",
+            "This file remains intentionally thin to prevent policy drift."
+          ]
+        }
+      ],
+      "settings": {
+        "source": "adapters/Claude/settings.json",
+        "output": ".claude/settings.json"
+      },
+      "agents": {
+        "output_dir": ".claude/agents"
+      }
+    },
+
+    "Codex": {
+      "label": "Codex CLI",
+      "system_files": [
+        {
+          "template": "codex-agents-md",
+          "output": ".codex/AGENTS.md",
+          "format": "markdown",
+          "embed_tier": "hot",
+          "header": [
+            "# Codex Hot Policy Adapter",
+            "<!-- NOTE: Codex CLI does not support @include directives. AGENTS-hot.md content is embedded directly below. -->"
+          ]
+        }
+      ],
+      "settings": {
+        "source": "adapters/Codex/config.toml",
+        "output": ".codex/config.toml"
+      },
+      "hooks": {
+        "source": "adapters/Codex/hooks.json",
+        "output": ".codex/hooks.json"
+      },
+      "agents": {
+        "output_dir": ".codex/agents"
+      }
+    },
+
+    "Cursor": {
+      "label": "Cursor",
+      "system_files": [
+        {
+          "template": "cursor-global-policy",
+          "output": ".cursor/rules/00-global-policy.mdc",
+          "source": "adapters/Cursor/global-policy.mdc"
+        },
+        {
+          "template": "cursor-tier-rule",
+          "output": ".cursor/rules/01-agents-policy.mdc",
+          "tier": "hot",
+          "frontmatter": {
+            "description": "Project policy HOT tier -- bootstrap + rules 15-19, 21, 27 (always applied)",
+            "alwaysApply": true
+          }
+        },
+        {
+          "template": "cursor-tier-rule",
+          "output": ".cursor/rules/02-agents-warm.mdc",
+          "tier": "warm",
+          "frontmatter": {
+            "description": "Project policy WARM tier -- rules 1-5, 8-12, 14, 23, 25 (always applied for coding sessions)",
+            "alwaysApply": true
+          }
+        },
+        {
+          "template": "cursor-tier-rule",
+          "output": ".cursor/rules/03-agents-cold.mdc",
+          "tier": "cold",
+          "frontmatter": {
+            "description": "Project policy COLD tier -- rules 6, 7, 13, 20, 22, 24, 26, 28-30. Load when: adding skills, changing permissions, adding dependencies, fixing critical bugs, planning rollbacks, starting a session, or updating agent memory.",
+            "alwaysApply": false
+          }
+        },
+        {
+          "template": "system-adapter.md",
+          "output": ".cursorrules",
+          "format": "markdown",
+          "extra_lines": [
+            "# Cursor Rules",
+            "",
+            "Read and follow canonical project policy:",
+            "- `AGENTS.md` (single source of truth)",
+            "- `policy/team-lead-orchestrator.md`",
+            "",
+            "# This file is equivalent to CURSOR.md.",
+            "# Cursor reads both .cursorrules and CURSOR.md from the project root."
+          ],
+          "skip_bootstrap": true
+        }
+      ],
+      "settings": {
+        "source": "adapters/Cursor/settings.json",
+        "output": ".cursor/settings.json"
+      },
+      "hooks": {
+        "source": "adapters/Cursor/hooks.json",
+        "output": ".cursor/hooks.json"
+      }
+    },
+
+    "Gemini": {
+      "label": "Gemini CLI",
+      "system_files": [
+        {
+          "template": "system-adapter.md",
+          "output": "GEMINI.md",
+          "format": "markdown",
+          "skip_bootstrap": true,
+          "extra_lines": [
+            "@AGENTS.md",
+            "@policy/team-lead-orchestrator.md"
+          ]
+        },
+        {
+          "template": "system-adapter.md",
+          "output": ".gemini/GEMINI.md",
+          "format": "markdown",
+          "skip_bootstrap": true,
+          "extra_lines": [
+            "@AGENTS.md",
+            "@policy/team-lead-orchestrator.md"
+          ]
+        },
+        {
+          "template": "gemini-agents-md",
+          "output": ".gemini/AGENTS.md",
+          "format": "markdown",
+          "skip_bootstrap": true,
+          "extra_lines": [
+            "# Gemini Adapter",
+            "",
+            "Read and follow canonical project policy:",
+            "- `AGENTS.md` (single source of truth)",
+            "- `policy/team-lead-orchestrator.md`"
+          ]
+        }
+      ],
+      "settings": {
+        "source": "adapters/Gemini/settings.json",
+        "output": ".gemini/settings.json"
+      },
+      "hooks": {
+        "source_dir": "adapters/Gemini/hooks",
+        "output_dir": ".gemini/hooks"
+      },
+      "hooks_dir": {
+        "source_dir": "adapters/Gemini/hooks",
+        "output_dir": ".gemini/hooks"
+      },
+      "agents": {
+        "output_dir": ".gemini/extensions/ai-coding-agents/agents"
+      },
+      "extension_manifest": {
+        "source": "adapters/Gemini/extension-manifest.json",
+        "output": ".gemini/extensions/ai-coding-agents/manifest.json"
+      }
+    },
+
+    "OpenCode": {
+      "label": "OpenCode",
+      "system_files": [
+        {
+          "template": "system-adapter.md",
+          "output": "OPENCODE.md",
+          "format": "markdown",
+          "extra_footer": [
+            "OpenCode configuration is generated as `out/opencode.json` and deployed to `~/opencode.json`."
+          ]
+        },
+        {
+          "template": "opencode-agents-md",
+          "output": ".opencode/AGENTS.md",
+          "format": "markdown",
+          "skip_bootstrap": true,
+          "extra_lines": [
+            "# OpenCode Adapter",
+            "",
+            "Read and follow canonical project policy:",
+            "- `AGENTS.md` (single source of truth)",
+            "- `policy/team-lead-orchestrator.md`"
+          ]
+        }
+      ],
+      "config": {
+        "source": "adapters/OpenCode/config.json",
+        "output": "opencode.json"
+      },
+      "agents": {
+        "output_dir": ".opencode/agents"
+      }
+    },
+
+    "Qwen": {
+      "label": "Qwen Code",
+      "system_files": [
+        {
+          "template": "qwen-domain-extension",
+          "output": ".qwen/AGENTS.md",
+          "source": "adapters/Qwen/AGENTS.md"
+        }
+      ]
+    },
+
+    "Cline": {
+      "label": "Cline",
+      "system_files": [
+        {
+          "template": "system-adapter.md",
+          "output": "CLINE.md",
+          "format": "markdown",
+          "extra_footer": [
+            "Cline configuration is in `.cline/settings.json` at project root.",
+            "After editing adapter files or `agents/*.md`, restart VSCode.",
+            "In new VSCode session, Cline will automatically load policy from AGENTS.md."
+          ]
+        }
+      ],
+      "settings": {
+        "source": ".cline/settings.json",
+        "output": ".cline/settings.json"
+      }
+    },
+
+    "shared_agents": {
+      "source_dir": "agents",
+      "systems": ["Claude", "Codex", "Gemini", "OpenCode", "Cursor", "Qwen", "Cline"]
+    },
+
+    "tier_files": {
+      "source": "AGENTS.md",
+      "output_dir": "",
+      "files": [
+        {"tier": "hot", "output": "AGENTS-hot.md"},
+        {"tier": "warm", "output": "AGENTS-warm.md"},
+        {"tier": "cold", "output": "AGENTS-cold.md"},
+        {"tiers": ["hot", "warm"], "output": "AGENTS-hot-warm.md"}
+      ]
+    }
+  }
+}

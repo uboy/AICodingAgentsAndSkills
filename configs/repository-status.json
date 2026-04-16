@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "last_updated": "2026-04-16",
+  "authoritative_sources": [
+    {
+      "path": "AGENTS.md",
+      "kind": "policy",
+      "status": "active"
+    },
+    {
+      "path": "adapters/systems.json",
+      "kind": "adapter_manifest",
+      "status": "active"
+    },
+    {
+      "path": "adapters/",
+      "kind": "adapter_sources",
+      "status": "active"
+    },
+    {
+      "path": "skills/",
+      "kind": "skill_sources",
+      "status": "active"
+    },
+    {
+      "path": "deploy/skill-deployment-map.json",
+      "kind": "skill_mapping",
+      "status": "active"
+    }
+  ],
+  "generators": [
+    {
+      "path": "scripts/sync-adapters.ps1",
+      "status": "active",
+      "canonical": true
+    },
+    {
+      "path": "scripts/sync-adapters.sh",
+      "status": "active",
+      "canonical": false,
+      "notes": "Shell entrypoint delegates to the PowerShell generator when pwsh is available."
+    }
+  ],
+  "validators": [
+    {
+      "path": "scripts/validate-parity.ps1",
+      "status": "active"
+    },
+    {
+      "path": "scripts/validate-parity.sh",
+      "status": "active"
+    },
+    {
+      "path": "scripts/run-integrity-fast.ps1",
+      "status": "active"
+    },
+    {
+      "path": "tests/",
+      "status": "active"
+    }
+  ],
+  "generated_outputs": [
+    {
+      "path": "out/",
+      "status": "generated",
+      "authoritative": false
+    }
+  ],
+  "layers": [
+    {
+      "id": "shared_agents_source_of_truth",
+      "status": "blocked",
+      "requires_owner_decision": true,
+      "decision_state": "pending",
+      "authoritative": false,
+      "notes": "Shared agents source is unresolved because agents/ has no canonical tracked source files."
+    },
+    {
+      "id": "promptfoo_eval_and_skill_manifest_generation",
+      "status": "blocked",
+      "requires_owner_decision": true,
+      "decision_state": "pending",
+      "authoritative": false,
+      "notes": "Promptfoo suites and the authoritative skill-manifest generator are not present in the repository."
+    }
+  ],
+  "inactive_placeholders": [
+    {
+      "path": "promptfooconfig.yaml",
+      "status": "inactive",
+      "runnable": false,
+      "requires_owner_decision": true
+    }
+  ],
+  "static_manual_artifacts": [
+    {
+      "path": "deploy/skill-deployment-manifest.tsv",
+      "status": "static_manual",
+      "generated": false,
+      "authoritative_generator_present": false,
+      "requires_owner_decision": true
+    }
+  ]
+}

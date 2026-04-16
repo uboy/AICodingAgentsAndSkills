@@ -1,0 +1,20 @@
+{
+  "rules": [
+    {
+      "path": ".cursorrules/00-global-policy.mdc",
+      "alwaysApply": true
+    },
+    {
+      "path": ".cursor/rules/01-agents-policy.mdc",
+      "alwaysApply": true
+    },
+    {
+      "path": ".cursor/rules/02-agents-warm.mdc",
+      "alwaysApply": true
+    },
+    {
+      "path": ".cursor/rules/03-agents-cold.mdc",
+      "alwaysApply": false
+    }
+  ]
+}

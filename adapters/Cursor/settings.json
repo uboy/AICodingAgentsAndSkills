@@ -1,0 +1,19 @@
+{
+  "ui": {
+    "footer": {
+      "items": [
+        {
+          "type": "text",
+          "content": "Agents: ",
+          "command": "/agents"
+        }
+      ]
+    }
+  },
+  "settings": {
+    "compact": {
+      "enabled": true,
+      "threshold": 0.7
+    }
+  }
+}

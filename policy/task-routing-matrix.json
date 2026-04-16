@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "response_language": "user_language",
+  "profile_order": [
+    "repo_change",
+    "repo_read",
+    "content_task",
+    "general"
+  ],
+  "profiles": {
+    "repo_change": {
+      "description": "Tracked repository changes: code, scripts, configs, policy, docs.",
+      "allow_commit_output": true,
+      "non_trivial_flow": "six_step_lifecycle",
+      "recommended_agents": [
+        "team-lead-orchestrator",
+        "agent-architect",
+        "lead-dev-planner",
+        "implementation-developer",
+        "code-review-qa",
+        "docs-writer"
+      ],
+      "recommended_skills": [
+        "code-review",
+        "security-review",
+        "performance-review",
+        "agent-system-coach"
+      ]
+    },
+    "repo_read": {
+      "description": "Read-only repository analysis, explanation, audit, and review.",
+      "allow_commit_output": false,
+      "recommended_agents": [
+        "team-lead-orchestrator"
+      ],
+      "recommended_skills": [
+        "code-review",
+        "security-review",
+        "performance-review",
+        "build-system-analysis",
+        "large-codebase-context",
+        "agent-system-coach"
+      ]
+    },
+    "content_task": {
+      "description": "Homework, source analysis, transcript processing, text editing, and other content-first work.",
+      "allow_commit_output": false,
+      "multi_step_contract": [
+        "execution_plan",
+        "answer_plan",
+        "sequential_small_steps"
+      ],
+      "recommended_agents": [
+        "team-lead-orchestrator",
+        "homework-manager",
+        "homework-indexer",
+        "text-editor"
+      ],
+      "recommended_skills": [
+        "homework-management",
+        "text-humanize",
+        "text-cleanup",
+        "lecture-transcript",
+        "meeting-notes",
+        "task-progress",
+        "task-specifier",
+        "openharmony-task-specifier"
+      ]
+    },
+    "general": {
+      "description": "Questions about policy, behavior, process, or lightweight discussion without repository edits.",
+      "allow_commit_output": false,
+      "recommended_agents": [
+        "team-lead-orchestrator"
+      ],
+      "recommended_skills": [
+        "agent-system-coach"
+      ]
+    }
+  },
+  "commit_output_gate": {
+    "required": [
+      "tracked_repo_diff_exists",
+      "verification_passed",
+      "no_secret_blockers",
+      "no_scope_blockers",
+      "no_failed_gates",
+      "change_is_ready_to_commit"
+    ]
+  }
+}

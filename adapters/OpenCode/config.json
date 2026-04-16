@@ -1,0 +1,36 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "telma/qwen",
+  "small_model": "telma/qwen",
+  "provider": {
+    "telma": {
+      "name": "telma",
+      "npm": "@ai-sdk/openai-compatible",
+      "models": {
+        "qwen": {
+          "name": "qwen"
+        }
+      },
+      "options": {
+        "baseURL": "http://tsnnlx12bs02.ad.telmast.com:3000/api",
+        "timeout": 600000,
+        "chunkTimeout": 60000
+      }
+    }
+  },
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 4000
+  },
+  "instructions": [
+    "Always use clear Markdown formatting."
+  ],
+  "permission": {
+    "bash": "ask",
+    "read": "allow",
+    "edit": "allow",
+    "write": "allow",
+    "webfetch": "ask"
+  }
+}

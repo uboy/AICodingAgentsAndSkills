@@ -1,0 +1,25 @@
+{
+  "name": "aicodingagentsandskills",
+  "version": "1.0.0",
+  "description": "Shared configuration repository that deploys **agents, skills, policies, and validation scripts** to 6 AI coding systems on the user's machine.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "python -m pytest tests -q"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uboy/AICodingAgentsAndSkills.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/uboy/AICodingAgentsAndSkills/issues"
+  },
+  "homepage": "https://github.com/uboy/AICodingAgentsAndSkills#readme"
+}

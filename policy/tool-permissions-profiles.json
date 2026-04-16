@@ -1,0 +1,50 @@
+{
+  "default": {
+    "claude_allow": [
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Bash(Get-ChildItem:*)",
+      "Bash(rg:*)",
+      "Bash(Get-Content:*)",
+      "Bash(cat:*)",
+      "Bash(type:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git ls-files:*)",
+      "Bash(pwd:*)"
+    ],
+    "codex_approval_policy": "never",
+    "opencode_permission": {
+      "bash": "ask",
+      "read": "allow",
+      "edit": "allow",
+      "write": "allow",
+      "webfetch": "ask"
+    }
+  },
+  "weak_model": {
+    "claude_allow": [
+      "Bash(ls:*)",
+      "Bash(dir:*)",
+      "Bash(Get-ChildItem:*)",
+      "Bash(rg:*)",
+      "Bash(Get-Content:*)",
+      "Bash(cat:*)",
+      "Bash(type:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git ls-files:*)",
+      "Bash(pwd:*)"
+    ],
+    "codex_approval_policy": "never",
+    "opencode_permission": {
+      "bash": "ask",
+      "read": "allow",
+      "edit": "allow",
+      "write": "allow",
+      "webfetch": "ask"
+    }
+  }
+}

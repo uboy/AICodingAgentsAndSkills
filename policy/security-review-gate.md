@@ -1,0 +1,101 @@
+# Security Review Gate
+
+This gate is the **primary orchestrator** for all pre-completion checks. It is mandatory for script/config/policy changes.
+
+## Hierarchy and Relationships
+
+The security gate operates hierarchically:
+- **`security-review-gate`**: Entry point; coordinates all specialized gates below.
+  - **`change-control-gate`**: Enforces scope, docs contract, and review report existence.
+    - **`validate-review-report`**: Specialized validator for review report structure and quality.
+  - **`validate-cycle-proof`**: Enforces contract compliance and iteration limits. **Note: Both `.ps1` and `.sh` versions are executed to ensure cross-platform schema completeness.**
+  - **`validate-coordination`**: Validates handoff and state artifacts.
+  - **`run-integrity-fast`**: Cross-OS and cross-system consistency checks.
+
+*Note: Some checks (like Independent Review) are intentionally redundant across specialized gates to ensure fail-fast safety even when gates are run in isolation.*
+
+## Required Command
+
+Windows:
+
+```powershell
+pwsh -NoProfile -File .\scripts\security-review-gate.ps1
+```
+
+Linux/macOS:
+
+```bash
+bash ./scripts/security-review-gate.sh
+```
+
+## Gate Checks
+
+1. Merge conflict markers in changed files.
+2. High-confidence secret patterns in changed files.
+3. Syntax sanity:
+- PowerShell parser checks for changed `*.ps1`
+- `bash -n` checks for changed `*.sh` (if bash exists)
+4. Skill schema validation if `skills/` changed.
+5. Fast integrity runner:
+- `scripts/run-integrity-fast.ps1` (Windows)
+- `scripts/run-integrity-fast.sh` (Linux/macOS)
+- includes cross-OS script parity, cross-system adapter checks, quick config/structure checks.
+6. Change-control gate:
+- `scripts/change-control-gate.ps1` (Windows)
+- `scripts/change-control-gate.sh` (Linux/macOS)
+- uses local `coordination/change-scope.txt` when present, but does not require it
+- treats temporary/runtime artifacts as non-canonical by default (for example `.scratchpad/*`, cache files, local coordination state, runtime dumps) unless they are explicitly documented as tracked scope
+- requires docs/policy evidence for functional changes (`README.md` or `policy/*.md`/equivalent docs)
+- Rule 31 scope:
+  - for this repository policy/tooling changes, docs evidence above is sufficient;
+  - for external product runtime changes, additionally require `SPEC.md`, `docs/REQUIREMENTS_TRACEABILITY.md`, and `docs/design/<feature>-vN.md`
+- **significant logic documentation contract**:
+  - if changes affect requirements/behavior/capabilities enforcement logic (for example gate scripts, validators, install/deploy core, policy profiles/rules), `README.md` update is mandatory in the same change set
+  - gate check: `significant-doc-sync`
+- blocks modification of existing tests/evals by default (new tests allowed)
+- blocks architecture/design file changes by default (`SPEC.md`, `ARCHITECTURE.md`, `docs/design/*`, `docs/architecture/*`)
+- allows exceptions only with explicit local override record: `coordination/approval-overrides.json`
+- if local review reports are present, they are validated by:
+  - `scripts/validate-review-report.ps1` (Windows)
+  - `scripts/validate-review-report.sh` (Linux/macOS)
+7. Coordination validation:
+- `scripts/validate-coordination.ps1` (Windows)
+- `scripts/validate-coordination.sh` (Linux/macOS)
+- validates changed local handoffs/state artifacts when they are present
+- enforces the handoff `Commit Readiness` contract for targeted files
+- blocks `Commit pending user approval` when the handoff still records failed verification or lacks explicit commit-ready evidence
+8. Cycle-proof gate:
+- `scripts/validate-cycle-proof.ps1` (Windows)
+- `scripts/validate-cycle-proof.sh` (Linux/macOS)
+- validates local `coordination/cycle-contract.json` when that workflow is in use
+- checks required review/handoff artifacts
+- checks independent review (`Reviewer` must differ from `Implementation Agent`)
+- checks required verification commands are present in the review report
+- checks iteration-size limits (`max_functional_files`, `max_diff_lines`) with explicit override only
+
+## Cross-System Coverage
+
+The gate and integrity checks enforce consistency for all target systems:
+
+- Claude
+- Codex
+- Cursor
+- Gemini
+- OpenCode
+
+## Decision
+
+- `PASS`: all mandatory checks passed.
+- `FAIL`: at least one mandatory check failed and task must not be marked complete.
+- `WARN`: non-blocking limitation (for example, `bash` not available on host) must be reported explicitly.
+
+## Commit-Ready Semantics
+
+Passing implementation is not enough for a commit-ready handoff.
+
+If an agent writes `Commit pending user approval`, the handoff must already reflect that:
+- required commit-readiness verification passed,
+- no known secret findings remain,
+- no known scope-drift blockers remain.
+
+If those conditions are not met, the correct handoff status is `Not commit-ready.` with blockers.
