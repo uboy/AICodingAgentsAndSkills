@@ -1,71 +1,27 @@
-# promptfooconfig.yaml — inactive promptfoo placeholder
+# promptfooconfig.yaml — active promptfoo base config for restored local suites
 # https://promptfoo.dev/docs/configuration/
-# This checkout does not contain the suite YAML files previously referenced by
-# this config. Keep this file inactive until authoritative promptfoo suites are
-# restored.
+#
+# Default provider:
+# - uses the standard OpenAI provider contract
+# - expects OPENAI_API_KEY to be configured in the local environment
+# - can be overridden locally if you prefer another provider
 
 description: |
-  Inactive placeholder for a future promptfoo-based eval setup.
-  The authoritative suite YAML files are not present in this checkout.
-
-# ─── Providers ─────────────────────────────────────────────
-#
-# Option 1: OpenAI (default)
-#   Set OPENAI_API_KEY env var, uncomment the openai provider below.
-#
-# Option 2: Custom OpenAI-compatible endpoint (Ollama, vLLM, LiteLLM, Azure, etc.)
-#   Set OPENAI_BASE_URL + API key, use the openai-compatible provider.
-#
-# Option 3: Anthropic
-#   Set ANTHROPIC_API_KEY env var, uncomment the anthropic provider.
-#
-# Option 4: Any provider via promptfoo's built-in support
-#   See: https://promptfoo.dev/docs/providers/
-#
-# To use: uncomment ONE provider block, comment out the rest.
+  Active promptfoo base config for restored local skill suites.
+  This first restored wave covers the academic core:
+  lecture-transcript, homework-management, and case-analyzer.
+  Use scripts/run-promptfoo-evals.ps1 or scripts/run-promptfoo-evals.sh
+  to compose this base config with each tracked suite file.
 
 providers:
-  # ── Option 1: OpenAI ───────────────────────────────────
-  # - id: openai:gpt-4o
-  #   label: gpt-4o
+  - id: openai:gpt-4.1-mini
+    label: default-openai
 
-  # ── Option 2: Custom OpenAI-compatible endpoint ─────────
-  # Examples:
-  #   Ollama:    OPENAI_BASE_URL=http://localhost:11434/v1
-  #   vLLM:      OPENAI_BASE_URL=http://localhost:8000/v1
-  #   LiteLLM:   OPENAI_BASE_URL=http://localhost:4000/v1
-  #   Azure:     OPENAI_BASE_URL=https://<resource>.openai.azure.com/openai/deployments/<model>
-  #   Together:  OPENAI_BASE_URL=https://api.together.xyz/v1
-  #   Groq:      OPENAI_BASE_URL=https://api.groq.com/openai/v1
-  #
-  # Set env vars:
-  #   OPENAI_BASE_URL=http://your-endpoint/v1
-  #   OPENAI_API_KEY=your-key   (or set to "unused" for local models)
-  #
-  - id: openai:qwen27b
-    label: qwen27b-local
-    config:
-      apiBaseUrl: http://tsnnlx12bs02.ad.telmast.com:3000/api/v1
-
-  # ── Option 3: Anthropic ────────────────────────────────
-  # - id: anthropic:claude-sonnet-4-20250514
-  #   label: claude-sonnet
-
-  # ── Option 4: Ollama (local, no API key needed) ────────
-  # - id: ollama:llama3
-  #   label: ollama-llama3
-  #   config:
-  #     baseUrl: http://localhost:11434
-
-# Shared settings
 defaultTest:
   options:
     maxTokens: 4096
 
-# Eval suites
-# Intentionally empty while the promptfoo suite files are absent from this checkout.
-configs: []
-
-outputPath: evals/results
-# Owner decision pending.
-# See docs/BLOCKED-LAYERS-DECISION.md before reactivating this promptfoo path.
+configs:
+  - evals/promptfoo/suites/lecture-transcript.yaml
+  - evals/promptfoo/suites/homework-management.yaml
+  - evals/promptfoo/suites/case-analyzer.yaml

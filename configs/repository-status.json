@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "last_updated": "2026-04-16",
+  "last_updated": "2026-04-17",
   "authoritative_sources": [
     {
       "path": "AGENTS.md",
@@ -23,6 +23,21 @@
       "status": "active"
     },
     {
+      "path": "agents/",
+      "kind": "agent_sources",
+      "status": "active"
+    },
+    {
+      "path": "promptfooconfig.yaml",
+      "kind": "promptfoo_entrypoint",
+      "status": "active"
+    },
+    {
+      "path": "evals/promptfoo/suites/",
+      "kind": "promptfoo_suite_sources",
+      "status": "active"
+    },
+    {
       "path": "deploy/skill-deployment-map.json",
       "kind": "skill_mapping",
       "status": "active"
@@ -39,6 +54,44 @@
       "status": "active",
       "canonical": false,
       "notes": "Shell entrypoint delegates to the PowerShell generator when pwsh is available."
+    },
+    {
+      "path": "scripts/generate-skill-deployment-manifest.ps1",
+      "status": "active",
+      "canonical": true
+    },
+    {
+      "path": "scripts/generate-skill-deployment-manifest.sh",
+      "status": "active",
+      "canonical": false,
+      "notes": "Shell entrypoint uses the shared Python generator for the same manifest output."
+    }
+  ],
+  "shared_infrastructure": [
+    {
+      "path": "scripts/study-materials-prep.py",
+      "kind": "academic_source_preparation",
+      "status": "active"
+    },
+    {
+      "path": "skills/_shared/ACADEMIC_SOURCE_PACK.md",
+      "kind": "academic_source_pack_contract",
+      "status": "active"
+    },
+    {
+      "path": "skills/_shared/ACADEMIC_INGESTION_WORKFLOW.md",
+      "kind": "academic_ingestion_workflow_contract",
+      "status": "active"
+    },
+    {
+      "path": "policy/execution-brief-contract.md",
+      "kind": "execution_brief_contract",
+      "status": "active"
+    },
+    {
+      "path": "coordination/templates/execution-brief.json",
+      "kind": "execution_brief_template",
+      "status": "active"
     }
   ],
   "validators": [
@@ -66,39 +119,7 @@
       "authoritative": false
     }
   ],
-  "layers": [
-    {
-      "id": "shared_agents_source_of_truth",
-      "status": "blocked",
-      "requires_owner_decision": true,
-      "decision_state": "pending",
-      "authoritative": false,
-      "notes": "Shared agents source is unresolved because agents/ has no canonical tracked source files."
-    },
-    {
-      "id": "promptfoo_eval_and_skill_manifest_generation",
-      "status": "blocked",
-      "requires_owner_decision": true,
-      "decision_state": "pending",
-      "authoritative": false,
-      "notes": "Promptfoo suites and the authoritative skill-manifest generator are not present in the repository."
-    }
-  ],
-  "inactive_placeholders": [
-    {
-      "path": "promptfooconfig.yaml",
-      "status": "inactive",
-      "runnable": false,
-      "requires_owner_decision": true
-    }
-  ],
-  "static_manual_artifacts": [
-    {
-      "path": "deploy/skill-deployment-manifest.tsv",
-      "status": "static_manual",
-      "generated": false,
-      "authoritative_generator_present": false,
-      "requires_owner_decision": true
-    }
-  ]
+  "layers": [],
+  "inactive_placeholders": [],
+  "static_manual_artifacts": []
 }

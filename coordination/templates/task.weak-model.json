@@ -7,6 +7,7 @@
   "depends_on": [],
   "inputs": [],
   "outputs": [],
+  "execution_brief_ref": "coordination/briefs/T-000.json",
   "checklist": [
     {
       "id": "C-1",
@@ -25,6 +26,12 @@
     }
   ],
   "profile": "weak_model",
+  "chunking_mode": "small_isolated_verified_chunks",
+  "refresh_triggers": [
+    "after_each_verified_chunk",
+    "after_scope_change",
+    "before_resume_after_pause"
+  ],
   "objective": "One concrete, testable outcome.",
   "step_contracts": [
     {

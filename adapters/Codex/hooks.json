@@ -1,7 +1,0 @@
-{
-  "hooks": {
-    "pre-commit": {
-      "command": "pwsh -File scripts/security-review-gate.ps1"
-    }
-  }
-}

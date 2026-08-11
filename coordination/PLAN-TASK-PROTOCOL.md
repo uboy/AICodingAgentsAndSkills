@@ -11,6 +11,32 @@ Each plan should include:
 3. `steps`: ordered list with status (`pending`, `in_progress`, `completed`, `blocked`).
 4. `verification`: commands/checks required for completion.
 
+## Execution Brief Schema
+
+Before delegation or multi-step execution, create an execution brief using:
+- `coordination/templates/execution-brief.json`
+
+Suggested local runtime location:
+- `coordination/briefs/<task-id>.json`
+
+Required fields:
+
+1. `task_profile`
+2. `task_shape`
+3. `refined_objective`
+4. `user_intent`
+5. `output_expectation`
+6. `hard_constraints`
+7. `forbidden_assumptions`
+8. `relevant_sources`
+9. `source_prep_recommendation`
+10. `active_rules`
+11. `subtask_boundary`
+12. `success_criteria`
+13. `verification_requirements`
+14. `chunking_requirement`
+15. `long_task_refresh`
+
 ## Task Record Schema
 
 When you use the local coordination workflow, task records in `coordination/tasks.jsonl` should include:
@@ -24,6 +50,7 @@ When you use the local coordination workflow, task records in `coordination/task
 7. `inputs`
 8. `outputs`
 9. `updated_at`
+10. `execution_brief_ref`
 
 Checklist item schema:
 
@@ -53,6 +80,7 @@ For non-trivial tasks (multiple files/steps), checklist tracking is mandatory:
 3. Mark incomplete items as `blocked` with reason if task cannot proceed.
 4. Ensure verification/doc/security-gate items are present and completed before handoff.
 5. If you are using the local cycle-proof workflow, define or update `coordination/cycle-contract.json` before implementation.
+6. Keep the execution brief reference current when the active subtask, constraints, or file scope change materially.
 
 ## Micro-Step Execution for Weak Models
 
@@ -75,6 +103,22 @@ To ensure context persistence (Rule 28), agents MUST maintain `coordination/stat
 - `artifacts`: list of paths in `.scratchpad/` containing temporary logs, diffs, or plans.
 
 This file acts as the agent's "external memory" and MUST be updated after every checklist item completion.
+
+## Long-Task Refresh Rule
+
+For long tasks or large-codebase work, refresh the active execution brief:
+
+1. before delegation;
+2. after each verified chunk;
+3. after blockers or failed verification;
+4. before resuming after interruption.
+
+Each refresh should restate:
+- refined objective,
+- active rules,
+- source constraints,
+- current subtask boundary,
+- next acceptance criteria.
 
 Tracked vs local rule:
 

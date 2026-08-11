@@ -63,7 +63,6 @@ $adapterFiles = @(
     @{ Rel = "out/.cursorrules"; Source = "out" }
     @{ Rel = "out/.codex/AGENTS.md"; Source = "out" }
     @{ Rel = "out/.opencode/AGENTS.md"; Source = "out" }
-    @{ Rel = "out/opencode.json"; Source = "out" }
     @{ Rel = "out/.gemini/AGENTS.md"; Source = "out" }
     @{ Rel = "out/.gemini/GEMINI.md"; Source = "out" }
     @{ Rel = "out/.qwen/AGENTS.md"; Source = "out" }
@@ -80,10 +79,6 @@ foreach ($entry in $adapterFiles) {
     $path = Join-Path $RepoRoot $rel
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
         Add-Result -Severity "FAIL" -Check "adapter-presence" -Detail ("Missing required adapter file: {0}" -f $rel)
-        continue
-    }
-
-    if ($rel -eq "out/opencode.json") {
         continue
     }
 

@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd -P)"
 MANIFEST_PATH="$REPO_ROOT/deploy/manifest.txt"
+SKILL_MANIFEST_PATH="$REPO_ROOT/deploy/skill-deployment-manifest.tsv"
 HOME_DIR="${HOME:-$(cd ~ && pwd -P)}"
 BACKUP_ROOT=""
 BACKUP_NAME=""
@@ -68,6 +69,7 @@ fi
 BACKUP_DIR="$BACKUP_ROOT/$BACKUP_NAME"
 BACKUP_FILES_DIR="$BACKUP_DIR/files"
 INDEX_PATH="$BACKUP_DIR/index.tsv"
+ARCHIVE_PATH="$BACKUP_ROOT/${BACKUP_NAME}.zip"
 
 run_cmd() {
   local desc="$1"
@@ -140,6 +142,49 @@ while IFS='|' read -r source_rel target_rel; do
   add_row "BACKED_UP" "$target_rel" "$target_path" "$backup_path" ""
 done < "$MANIFEST_PATH"
 
+if [[ -f "$SKILL_MANIFEST_PATH" ]]; then
+  while IFS=$'\t' read -r action kind system tier source_rel target_rel _rest; do
+    [[ -z "${action// }" ]] && continue
+    [[ "${action#"${action%%[![:space:]]*}"}" == \#* ]] && continue
+    action="$(echo "$action" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    target_rel="$(echo "${target_rel:-}" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+    [[ "$action" != "deploy" || -z "$target_rel" ]] && continue
+
+    if [[ -n "${SEEN_TARGETS["$target_rel"]+x}" ]]; then
+      continue
+    fi
+    SEEN_TARGETS["$target_rel"]=1
+
+    target_path="$HOME_DIR/$target_rel"
+    backup_path="$BACKUP_FILES_DIR/$target_rel"
+
+    if [[ ! -e "$target_path" && ! -L "$target_path" ]]; then
+      add_row "MISSING" "$target_rel" "$target_path" "" "Target does not exist in home."
+      continue
+    fi
+
+    if [[ -L "$target_path" ]]; then
+      linked="$(readlink "$target_path" || true)"
+      if [[ -n "$linked" ]]; then
+        if [[ "$linked" != /* ]]; then
+          linked="$(cd "$(dirname "$target_path")" && cd "$(dirname "$linked")" && pwd -P)/$(basename "$linked")"
+        fi
+        repo_abs="$(cd "$REPO_ROOT" && pwd -P)"
+        case "$linked" in
+          "$repo_abs"/*)
+            add_row "SKIP_LINKED_TO_REPO" "$target_rel" "$target_path" "" "Target is linked to repo source."
+            continue
+            ;;
+        esac
+      fi
+    fi
+
+    run_cmd "Create parent dir for backup: $(dirname "$backup_path")" mkdir -p "$(dirname "$backup_path")"
+    run_cmd "Backup: $target_path -> $backup_path" cp -a "$target_path" "$backup_path"
+    add_row "BACKED_UP" "$target_rel" "$target_path" "$backup_path" ""
+  done < "$SKILL_MANIFEST_PATH"
+fi
+
 if [[ $DRY_RUN -eq 0 ]]; then
   {
     echo -e "status\ttarget\tsource_path\tbackup_path\tnotes"
@@ -148,6 +193,20 @@ if [[ $DRY_RUN -eq 0 ]]; then
       echo -e "${status}\t${target}\t${source_path}\t${backup_path}\t${notes}"
     done
   } > "$INDEX_PATH"
+
+  if command -v python >/dev/null 2>&1; then
+    (
+      cd "$BACKUP_ROOT"
+      python -m zipfile -c "$ARCHIVE_PATH" "$BACKUP_NAME" >/dev/null
+    )
+  elif command -v zip >/dev/null 2>&1; then
+    (
+      cd "$BACKUP_ROOT"
+      zip -rq "$ARCHIVE_PATH" "$BACKUP_NAME"
+    )
+  else
+    echo "[!] Could not create archive: python and zip are both unavailable."
+  fi
 fi
 
 echo
@@ -163,7 +222,11 @@ fi
 echo
 if [[ $DRY_RUN -eq 1 ]]; then
   echo "Dry-run finished. No files were copied."
+  echo "[DRY] Create archive: $ARCHIVE_PATH"
 else
   echo "Backup created at: $BACKUP_DIR"
   echo "Index file: $INDEX_PATH"
+  if [[ -f "$ARCHIVE_PATH" ]]; then
+    echo "Archive file: $ARCHIVE_PATH"
+  fi
 fi

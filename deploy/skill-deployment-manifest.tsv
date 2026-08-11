@@ -16,9 +16,9 @@ deploy	skill	claude	library	skills/text-cleanup	.claude/skill-library/local/text
 deploy	skill	claude	library	skills/android-code-review	.claude/skill-library/local/android-code-review
 deploy	skill	claude	library	skills/api-contract-review	.claude/skill-library/local/api-contract-review
 deploy	skill	claude	library	skills/build-system-analysis	.claude/skill-library/local/build-system-analysis
+deploy	skill	claude	library	skills/case-analyzer	.claude/skill-library/local/case-analyzer
 deploy	skill	claude	library	skills/ci-failure-debugger	.claude/skill-library/local/ci-failure-debugger
 deploy	skill	claude	library	skills/gitcode-pr-review	.claude/skill-library/local/gitcode-pr-review
-deploy	skill	claude	library	skills/gitcode-pr-workflow	.claude/skill-library/local/gitcode-pr-workflow
 deploy	skill	claude	library	skills/homework-management	.claude/skill-library/local/homework-management
 deploy	skill	claude	library	skills/ios-code-review	.claude/skill-library/local/ios-code-review
 deploy	skill	claude	library	skills/java-code-review	.claude/skill-library/local/java-code-review
@@ -49,9 +49,9 @@ deploy	skill	codex	library	skills/text-cleanup	.codex/skill-library/local/text-c
 deploy	skill	codex	library	skills/android-code-review	.codex/skill-library/local/android-code-review
 deploy	skill	codex	library	skills/api-contract-review	.codex/skill-library/local/api-contract-review
 deploy	skill	codex	library	skills/build-system-analysis	.codex/skill-library/local/build-system-analysis
+deploy	skill	codex	library	skills/case-analyzer	.codex/skill-library/local/case-analyzer
 deploy	skill	codex	library	skills/ci-failure-debugger	.codex/skill-library/local/ci-failure-debugger
 deploy	skill	codex	library	skills/gitcode-pr-review	.codex/skill-library/local/gitcode-pr-review
-deploy	skill	codex	library	skills/gitcode-pr-workflow	.codex/skill-library/local/gitcode-pr-workflow
 deploy	skill	codex	library	skills/homework-management	.codex/skill-library/local/homework-management
 deploy	skill	codex	library	skills/ios-code-review	.codex/skill-library/local/ios-code-review
 deploy	skill	codex	library	skills/java-code-review	.codex/skill-library/local/java-code-review
@@ -82,9 +82,9 @@ deploy	skill	gemini	library	skills/text-cleanup	.gemini/extensions/ai-coding-age
 deploy	skill	gemini	library	skills/android-code-review	.gemini/extensions/ai-coding-agents/skill-library/android-code-review
 deploy	skill	gemini	library	skills/api-contract-review	.gemini/extensions/ai-coding-agents/skill-library/api-contract-review
 deploy	skill	gemini	library	skills/build-system-analysis	.gemini/extensions/ai-coding-agents/skill-library/build-system-analysis
+deploy	skill	gemini	library	skills/case-analyzer	.gemini/extensions/ai-coding-agents/skill-library/case-analyzer
 deploy	skill	gemini	library	skills/ci-failure-debugger	.gemini/extensions/ai-coding-agents/skill-library/ci-failure-debugger
 deploy	skill	gemini	library	skills/gitcode-pr-review	.gemini/extensions/ai-coding-agents/skill-library/gitcode-pr-review
-deploy	skill	gemini	library	skills/gitcode-pr-workflow	.gemini/extensions/ai-coding-agents/skill-library/gitcode-pr-workflow
 deploy	skill	gemini	library	skills/homework-management	.gemini/extensions/ai-coding-agents/skill-library/homework-management
 deploy	skill	gemini	library	skills/ios-code-review	.gemini/extensions/ai-coding-agents/skill-library/ios-code-review
 deploy	skill	gemini	library	skills/java-code-review	.gemini/extensions/ai-coding-agents/skill-library/java-code-review
@@ -115,9 +115,9 @@ deploy	skill	cursor	library	skills/text-cleanup	.cursor/skill-library/local/text
 deploy	skill	cursor	library	skills/android-code-review	.cursor/skill-library/local/android-code-review
 deploy	skill	cursor	library	skills/api-contract-review	.cursor/skill-library/local/api-contract-review
 deploy	skill	cursor	library	skills/build-system-analysis	.cursor/skill-library/local/build-system-analysis
+deploy	skill	cursor	library	skills/case-analyzer	.cursor/skill-library/local/case-analyzer
 deploy	skill	cursor	library	skills/ci-failure-debugger	.cursor/skill-library/local/ci-failure-debugger
 deploy	skill	cursor	library	skills/gitcode-pr-review	.cursor/skill-library/local/gitcode-pr-review
-deploy	skill	cursor	library	skills/gitcode-pr-workflow	.cursor/skill-library/local/gitcode-pr-workflow
 deploy	skill	cursor	library	skills/homework-management	.cursor/skill-library/local/homework-management
 deploy	skill	cursor	library	skills/ios-code-review	.cursor/skill-library/local/ios-code-review
 deploy	skill	cursor	library	skills/java-code-review	.cursor/skill-library/local/java-code-review
@@ -148,9 +148,9 @@ deploy	skill	opencode	library	skills/text-cleanup	.config/opencode/skill-library
 deploy	skill	opencode	library	skills/android-code-review	.config/opencode/skill-library/local/android-code-review
 deploy	skill	opencode	library	skills/api-contract-review	.config/opencode/skill-library/local/api-contract-review
 deploy	skill	opencode	library	skills/build-system-analysis	.config/opencode/skill-library/local/build-system-analysis
+deploy	skill	opencode	library	skills/case-analyzer	.config/opencode/skill-library/local/case-analyzer
 deploy	skill	opencode	library	skills/ci-failure-debugger	.config/opencode/skill-library/local/ci-failure-debugger
 deploy	skill	opencode	library	skills/gitcode-pr-review	.config/opencode/skill-library/local/gitcode-pr-review
-deploy	skill	opencode	library	skills/gitcode-pr-workflow	.config/opencode/skill-library/local/gitcode-pr-workflow
 deploy	skill	opencode	library	skills/homework-management	.config/opencode/skill-library/local/homework-management
 deploy	skill	opencode	library	skills/ios-code-review	.config/opencode/skill-library/local/ios-code-review
 deploy	skill	opencode	library	skills/java-code-review	.config/opencode/skill-library/local/java-code-review

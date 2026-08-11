@@ -66,5 +66,5 @@ Use profile key from `policy/tool-permissions-profiles.json`:
 
 Audit commands:
 
-- PowerShell: `pwsh -NoProfile -File .\scripts\audit-permissions-policy.ps1 -ProfileName weak_model`
-- Bash: `bash ./scripts/audit-permissions-policy.sh --profile-name weak_model`
+- PowerShell: `pwsh -NoProfile -File .\scripts\security-review-gate.ps1`
+- Bash: `bash ./scripts\security-review-gate.sh`

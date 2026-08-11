@@ -13,6 +13,7 @@ After each of these actions, update your state file:
 | Read a file | `last_action: "read <path>"` |
 | Edit a file | `last_action: "edited <path> (+N/-M lines)"` |
 | Run a command | `last_action: "ran: <command>"` + result |
+| Complete a verified chunk | `last_action: "verified chunk <id>"` + brief refresh summary |
 | Complete a task step | `status: "done"`, update checklist |
 | Encounter an error | `status: "error"`, `notes: "<error details>"` |
 | Hit rate limit | `status: "rate_limited"`, `resume_after_utc` |
@@ -38,6 +39,7 @@ File: `coordination/state/<agent-name>.md`
 - notes:
   - <any relevant context>
   - <decisions made and why>
+  - <execution brief refresh: current objective, boundary, rules, next acceptance>
 ```
 
 ## Checklist Update
@@ -68,9 +70,11 @@ bash scripts/agent-checkpoint.sh --agent <name> --task-id <id> --status in_progr
 2. **Multi-agent sync**: Different agents see the same state, no duplicate work
 3. **Audit trail**: Who did what, when, and why
 4. **Loop detection**: `retry_count` and `consecutive_same_action` catch infinite loops
+5. **Rule retention**: chunk-boundary checkpoint refresh keeps objective, rules, and scope alive during long work
 
 ## Enforcement
 
 - Agents that skip checkpointing for >3 actions in a row FAIL policy review
+- Long-running tasks that cross chunk boundaries without refreshing the active execution brief FAIL policy review
 - `code-review-qa` must verify checkpoint updates exist in any implementation PR
 - `wm-orchestrator` blocks dispatch if state file is stale (>30 min old)

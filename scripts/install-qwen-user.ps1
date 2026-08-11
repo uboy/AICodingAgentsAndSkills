@@ -10,11 +10,7 @@ $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 
 $Files = @(
-    @{ Source = ".qwen/AGENTS.md"; Target = ".qwen/AGENTS.md" },
-    @{ Source = ".qwen/settings.json.template"; Target = ".qwen/settings.json.template" },
-    @{ Source = ".qwen/text-editor.md"; Target = ".qwen/text-editor.md" },
-    @{ Source = ".qwen/homework-manager.md"; Target = ".qwen/homework-manager.md" },
-    @{ Source = ".qwen/docs-writer.md"; Target = ".qwen/docs-writer.md" }
+    @{ Source = "out/.qwen/AGENTS.md"; Target = ".qwen/AGENTS.md" }
 )
 
 foreach ($Entry in $Files) {
@@ -49,5 +45,4 @@ foreach ($Entry in $Files) {
 
 Write-Host ""
 Write-Host "Installed .qwen files to $HomeDir\.qwen\" -ForegroundColor Cyan
-Write-Host "Note: settings.json is NOT overwritten (user version has OAuth/model)." -ForegroundColor Yellow
-Write-Host "      Copy settings.json.template to settings.json and add your model/auth settings." -ForegroundColor Yellow
+Write-Host "Note: current generated Qwen support in this checkout deploys only AGENTS.md." -ForegroundColor Yellow

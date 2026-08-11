@@ -80,7 +80,6 @@ adapter_files=(
   "out/OPENCODE.md"
   "out/.cursorrules"
   "out/.opencode/AGENTS.md"
-  "out/opencode.json"
   "out/.gemini/AGENTS.md"
   "out/.gemini/GEMINI.md"
   "out/.qwen/AGENTS.md"
@@ -90,7 +89,6 @@ adapter_line_limit() {
   local rel="$1"
   case "$rel" in
     "out/.codex/AGENTS.md") echo "1000" ;;
-    "out/opencode.json") echo "1000" ;;
     *) echo "40" ;;
   esac
 }
@@ -99,10 +97,6 @@ for rel in "${adapter_files[@]}"; do
   path="$REPO_ROOT/$rel"
   if [[ ! -f "$path" ]]; then
     add_result "FAIL" "adapter-presence" "Missing required adapter file: $rel"
-    continue
-  fi
-
-  if [[ "$rel" == "out/opencode.json" ]]; then
     continue
   fi
 

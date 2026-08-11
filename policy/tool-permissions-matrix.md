@@ -38,11 +38,6 @@ Before completion, agents should confirm:
 
 ## Enforcement
 
-Audit/apply scripts:
-
-- `scripts/audit-permissions-policy.ps1`
-- `scripts/audit-permissions-policy.sh`
-
 Profile source:
 
 - `policy/tool-permissions-profiles.json`

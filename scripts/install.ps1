@@ -14,6 +14,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $ManifestPath = Join-Path $RepoRoot "deploy/manifest.txt"
+$SkillManifestPath = Join-Path $RepoRoot "deploy/skill-deployment-manifest.tsv"
 $TimeStamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $BackupScriptPath = Join-Path $PSScriptRoot "backup-user-config.ps1"
 
@@ -46,6 +47,8 @@ function Write-Warn([string]$Message) {
     Write-Host "[!] $Message" -ForegroundColor Yellow
 }
 
+$script:ConflictActionOverride = $null
+
 function Invoke-Exec([scriptblock]$Script, [string]$Description) {
     if ($DryRun) {
         Write-Host "[DRY] $Description"
@@ -58,6 +61,21 @@ function Get-AbsPath([string]$Path) {
     return (Resolve-Path -LiteralPath $Path).Path
 }
 
+function Get-ExistingItem([string]$Path) {
+    return Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+}
+
+function Test-ExistingPathOrLink([string]$Path) {
+    return $null -ne (Get-ExistingItem -Path $Path)
+}
+
+function Test-BrokenLink([string]$Path) {
+    $item = Get-ExistingItem -Path $Path
+    if (-not $item) { return $false }
+    if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { return $false }
+    return -not (Test-Path -LiteralPath $Path)
+}
+
 function Ensure-ParentDir([string]$Path) {
     $parent = Split-Path -Parent $Path
     if ([string]::IsNullOrWhiteSpace($parent)) { return }
@@ -67,9 +85,7 @@ function Ensure-ParentDir([string]$Path) {
 }
 
 function Backup-Existing([string]$Path) {
-    $backup = "$Path.backup-$TimeStamp"
-    Invoke-Exec { Copy-Item -LiteralPath $Path -Destination $backup -Recurse -Force } "Backup: $Path -> $backup"
-    return $backup
+    Write-Host "[*] Central backup already captured target before install: $Path"
 }
 
 function Show-Diff([string]$Source, [string]$Target) {
@@ -142,23 +158,32 @@ function New-Link([string]$Source, [string]$Target) {
 }
 
 function Select-Action([string]$Source, [string]$Target) {
+    if ($script:ConflictActionOverride) {
+        return $script:ConflictActionOverride
+    }
     if ($ConflictAction -ne "ask") { return $ConflictAction }
     if ($NonInteractive -or -not [System.Environment]::UserInteractive) { return "keep" }
     Show-Diff -Source $Source -Target $Target
     Write-Host ""
     Write-Host "Target exists: $Target"
-    Write-Host "[R]eplace with link to repo"
-    Write-Host "[M]erge into local file (conflict markers, no link)"
-    Write-Host "[K]eep local file (no link)"
+    Write-Host "[R] Replace this file with link to repo"
+    Write-Host "[RA] Replace this and all remaining conflicts"
+    Write-Host "[M] Merge this file (conflict markers, no link)"
+    Write-Host "[MA] Merge this and all remaining conflicts"
+    Write-Host "[K] Keep this local file"
+    Write-Host "[KA] Keep this and all remaining conflicts"
     while ($true) {
         try {
-            $choice = (Read-Host "Choose action [R/M/K]").Trim().ToLowerInvariant()
+            $choice = (Read-Host "Choose action [R/RA/M/MA/K/KA]").Trim().ToLowerInvariant()
         } catch { return "keep" }
         switch ($choice) {
             "r" { return "replace" }
+            "ra" { $script:ConflictActionOverride = "replace"; return "replace" }
             "m" { return "merge" }
+            "ma" { $script:ConflictActionOverride = "merge"; return "merge" }
             "k" { return "keep" }
-            default { Write-Warn "Invalid choice. Enter R, M, or K." }
+            "ka" { $script:ConflictActionOverride = "keep"; return "keep" }
+            default { Write-Warn "Invalid choice. Enter R, RA, M, MA, K, or KA." }
         }
     }
 }
@@ -168,7 +193,13 @@ function Deploy-File([string]$SourceFile, [string]$TargetFile) {
         Write-Warn "Skip missing source file: $SourceFile"
         return
     }
-    if (-not (Test-Path -LiteralPath $TargetFile)) {
+    if (-not (Test-ExistingPathOrLink -Path $TargetFile)) {
+        New-Link -Source $SourceFile -Target $TargetFile
+        return
+    }
+    if (Test-BrokenLink -Path $TargetFile) {
+        Write-Warn "Replacing broken link target: $TargetFile"
+        [void](Backup-Existing -Path $TargetFile)
         New-Link -Source $SourceFile -Target $TargetFile
         return
     }
@@ -238,6 +269,40 @@ function Parse-Manifest([string]$Path) {
     return $items
 }
 
+function Parse-SkillDeploymentManifest([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return @()
+    }
+
+    $items = @()
+    foreach ($line in Get-Content -LiteralPath $Path) {
+        $trimmed = $line.Trim()
+        if ([string]::IsNullOrWhiteSpace($trimmed) -or $trimmed.StartsWith("#")) {
+            continue
+        }
+
+        $parts = $line.Split("`t")
+        if ($parts.Count -lt 6) {
+            continue
+        }
+
+        $action = $parts[0].Trim()
+        $source = $parts[4].Trim()
+        $target = $parts[5].Trim()
+        if ($action -ne "deploy" -or [string]::IsNullOrWhiteSpace($source) -or [string]::IsNullOrWhiteSpace($target)) {
+            continue
+        }
+
+        $items += [PSCustomObject]@{
+            Source = $source
+            Target = $target
+            Category = "skills"
+        }
+    }
+
+    return $items
+}
+
 function Ensure-Dependency([string]$CommandName, [string]$WingetId) {
     if (Get-Command $CommandName -ErrorAction SilentlyContinue) { return $true }
     if (-not $InstallDeps) {
@@ -294,9 +359,11 @@ $gitOk = Ensure-Dependency -CommandName "git" -WingetId "Git.Git"
 [void](Ensure-Dependency -CommandName "gitleaks" -WingetId "Gitleaks.Gitleaks")
 
 $entries = @(Parse-Manifest -Path $ManifestPath)
+$skillEntries = @(Parse-SkillDeploymentManifest -Path $SkillManifestPath)
 Write-Step "Manifest entries: $($entries.Count)"
+Write-Step "Skill deployment entries: $($skillEntries.Count)"
 
-foreach ($entry in $entries) {
+foreach ($entry in ($entries + $skillEntries)) {
     Deploy-Entry -SourceRel $entry.Source -TargetRel $entry.Target
 }
 

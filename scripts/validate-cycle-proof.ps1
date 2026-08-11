@@ -197,7 +197,6 @@ $functionalPatterns = @(
     "CURSOR.md",
     "GEMINI.md",
     "OPENCODE.md",
-    "opencode.json",
     "templates/git/pre-commit",
     "skills/*",
     "commands/*",

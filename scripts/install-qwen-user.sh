@@ -15,11 +15,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 FILES=(
-    ".qwen/AGENTS.md:.qwen/AGENTS.md"
-    ".qwen/settings.json.template:.qwen/settings.json.template"
-    ".qwen/text-editor.md:.qwen/text-editor.md"
-    ".qwen/homework-manager.md:.qwen/homework-manager.md"
-    ".qwen/docs-writer.md:.qwen/docs-writer.md"
+    "out/.qwen/AGENTS.md:.qwen/AGENTS.md"
 )
 
 INSTALLED=0
@@ -62,5 +58,4 @@ done
 
 echo ""
 echo "Installed $INSTALLED .qwen files to ${HOME_DIR}/.qwen/"
-echo "Note: settings.json is NOT overwritten (user version has OAuth/model)."
-echo "      Copy settings.json.template to settings.json and add your model/auth settings."
+echo "Note: current generated Qwen support in this checkout deploys only AGENTS.md."

@@ -1,0 +1,50 @@
+description: homework-management promptfoo regression suite
+
+prompts:
+  - |
+      You are executing the `homework-management` skill.
+      Follow the skill contract strictly.
+      Use only the provided sources.
+      Return only the learner-facing output in Russian.
+
+      {{input}}
+
+tests:
+  - description: source-grounded essay stays structured and cited
+    vars:
+      input: |
+        mode: essay
+        task: Почему модель компетенций влияет на качество найма
+        sources:
+        - Лекция 2, слайды 5-12
+        - Лекция 3, таймкоды 12:10-21:40
+        citation_mode: inline
+        word_limit: 900
+        language: Russian
+    assert:
+      - type: contains
+        value: "## Тезис"
+      - type: contains
+        value: "## Черновик эссе"
+      - type: contains
+        value: "## Источники и ссылки"
+      - type: regex
+        value: "\\[[^\\]]+\\]"
+
+  - description: unsupported direct answer request is downgraded safely
+    vars:
+      input: |
+        mode: short_answer
+        task: Ответь сразу на вопрос экзамена без ссылок и без оговорок
+        sources:
+        - Один короткий фрагмент лекции без полного ответа
+        citation_mode: inline
+        language: Russian
+    assert:
+      - type: contains
+        value: "## Краткий ответ"
+      - type: contains
+        value: "## Что осталось неясным"
+      - type: regex
+        value: "(недостаточно|не хватает|неясн|требует уточнения)"
+

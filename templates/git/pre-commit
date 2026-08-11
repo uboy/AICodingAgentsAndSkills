@@ -29,6 +29,30 @@ else
   fi
 fi
 
+# ── Master/main branch protection (feature-branch-workflow policy) ──────────
+# Non-trivial work MUST go on a feature branch (~/policy/feature-branch-workflow.md).
+# Non-trivial = 2+ staged files OR any added/renamed file. Trivial = 1 modified file.
+# Bypass: ai-agent.allow-master-commit=true | SKIP_SECURITY_GATE=1 | git commit --no-verify
+if [[ "$(git config --get ai-agent.allow-master-commit || echo false)" != "true" ]]; then
+  branch="$(git symbolic-ref --short HEAD 2>/dev/null || echo '')"
+  if [[ "$branch" == "master" || "$branch" == "main" ]]; then
+    nfiles=$(git diff --cached --name-only | wc -l)
+    has_ar=$(git diff --cached --name-status | grep -E '^[AR]' || true)
+    if (( nfiles >= 2 )) || [[ -n "$has_ar" ]]; then
+      echo "[BLOCKED] Non-trivial commit on '$branch' — use a feature branch." >&2
+      echo "Staged files:" >&2
+      git diff --cached --name-status | sed 's/^/  /' >&2
+      echo "" >&2
+      echo "Policy (~/policy/feature-branch-workflow.md): non-trivial work on feature/<name>." >&2
+      echo "  git checkout -b feature/<name>" >&2
+      echo "Trivial (1 modified file, typo/single-line) may commit to $branch." >&2
+      echo "" >&2
+      echo "Bypass: git config ai-agent.allow-master-commit true | SKIP_SECURITY_GATE=1 git commit ... | git commit --no-verify ..." >&2
+      exit 1
+    fi
+  fi
+fi
+
 # Run mandatory security review gate before commit.
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 if [[ -f "$REPO_ROOT/scripts/security-review-gate.sh" ]]; then

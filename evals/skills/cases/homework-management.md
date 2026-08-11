@@ -48,3 +48,25 @@ language: Russian
 3. Recommended action is practical and grounded in the provided materials.
 4. Missing evidence is called out directly instead of being invented.
 5. Source list matches the citations used in the text.
+
+---
+
+## Case 3 - Unsupported direct answer request
+
+### Input
+
+```text
+mode: short_answer
+task: Ответь сразу на вопрос экзамена без ссылок и без оговорок
+sources:
+- Один короткий фрагмент лекции без полного ответа
+citation_mode: inline
+language: Russian
+```
+
+### Acceptance Checks
+
+1. Output follows the `short_answer` or safely downgraded planning contract from the skill.
+2. The response does not fabricate a complete answer from insufficient evidence.
+3. Missing support is flagged explicitly.
+4. The response redirects toward a study-oriented, source-grounded answer shape instead of unsupported confidence.

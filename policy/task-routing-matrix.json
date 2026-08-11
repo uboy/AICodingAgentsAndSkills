@@ -12,6 +12,10 @@
       "description": "Tracked repository changes: code, scripts, configs, policy, docs.",
       "allow_commit_output": true,
       "non_trivial_flow": "six_step_lifecycle",
+      "request_refinement_required": true,
+      "delegation_input": "execution_brief",
+      "long_task_refresh_required": true,
+      "code_execution_mode": "small_isolated_verified_chunks",
       "recommended_agents": [
         "team-lead-orchestrator",
         "agent-architect",
@@ -30,6 +34,10 @@
     "repo_read": {
       "description": "Read-only repository analysis, explanation, audit, and review.",
       "allow_commit_output": false,
+      "request_refinement_required": true,
+      "delegation_input": "execution_brief_when_scope_is_large",
+      "long_task_refresh_required": true,
+      "context_mode": "narrow_scope_progressive_discovery",
       "recommended_agents": [
         "team-lead-orchestrator"
       ],
@@ -45,7 +53,12 @@
     "content_task": {
       "description": "Homework, source analysis, transcript processing, text editing, and other content-first work.",
       "allow_commit_output": false,
+      "request_refinement_required": true,
+      "delegation_input": "execution_brief",
+      "long_task_refresh_required": true,
+      "source_prep_decision_in_brief": true,
       "multi_step_contract": [
+        "execution_brief",
         "execution_plan",
         "answer_plan",
         "sequential_small_steps"
@@ -53,10 +66,10 @@
       "recommended_agents": [
         "team-lead-orchestrator",
         "homework-manager",
-        "homework-indexer",
         "text-editor"
       ],
       "recommended_skills": [
+        "case-analyzer",
         "homework-management",
         "text-humanize",
         "text-cleanup",
@@ -76,6 +89,41 @@
       "recommended_skills": [
         "agent-system-coach"
       ]
+    }
+  },
+  "execution_brief_contract": {
+    "required": true,
+    "policy_path": "policy/execution-brief-contract.md",
+    "template_path": "coordination/templates/execution-brief.json",
+    "required_fields": [
+      "task_profile",
+      "task_shape",
+      "refined_objective",
+      "user_intent",
+      "output_expectation",
+      "hard_constraints",
+      "forbidden_assumptions",
+      "relevant_sources",
+      "source_prep_recommendation",
+      "active_rules",
+      "subtask_boundary",
+      "success_criteria",
+      "verification_requirements",
+      "chunking_requirement",
+      "long_task_refresh"
+    ],
+    "refresh_triggers": [
+      "before_delegation",
+      "after_each_verified_chunk",
+      "after_scope_change",
+      "after_blocker_or_failed_verification",
+      "before_resume_after_pause"
+    ],
+    "code_chunking_defaults": {
+      "mode": "small_isolated_verified_chunks",
+      "primary_file_scope_target": 3,
+      "verify_between_chunks": true,
+      "expand_scope_only_if_blocked": true
     }
   },
   "commit_output_gate": {

@@ -10,6 +10,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $ManifestPath = Join-Path $RepoRoot "deploy/manifest.txt"
+$SkillManifestPath = Join-Path $RepoRoot "deploy/skill-deployment-manifest.tsv"
 
 function Resolve-HomeDir([string]$OverrideHome) {
     if (-not [string]::IsNullOrWhiteSpace($OverrideHome)) {
@@ -52,6 +53,7 @@ if ([string]::IsNullOrWhiteSpace($BackupName)) {
 $BackupDir = Join-Path $BackupRoot $BackupName
 $BackupFilesDir = Join-Path $BackupDir "files"
 $IndexPath = Join-Path $BackupDir "index.tsv"
+$ArchivePath = Join-Path $BackupRoot "$BackupName.zip"
 
 function Write-Step([string]$Message) {
     Write-Host "[*] $Message"
@@ -84,6 +86,43 @@ function Parse-Manifest([string]$Path) {
     return $items
 }
 
+function Parse-SkillDeploymentManifest([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        return @()
+    }
+
+    $items = @()
+    foreach ($line in Get-Content -LiteralPath $Path) {
+        $trimmed = $line.Trim()
+        if ([string]::IsNullOrWhiteSpace($trimmed) -or $trimmed.StartsWith("#")) {
+            continue
+        }
+
+        $parts = $line.Split("`t")
+        if ($parts.Count -lt 6) {
+            continue
+        }
+
+        $action = $parts[0].Trim()
+        $source = $parts[4].Trim()
+        $target = $parts[5].Trim()
+        if ($action -ne "deploy" -or [string]::IsNullOrWhiteSpace($source) -or [string]::IsNullOrWhiteSpace($target)) {
+            continue
+        }
+
+        $items += [PSCustomObject]@{
+            Source = $source
+            Target = $target
+        }
+    }
+
+    return $items
+}
+
+function Get-ExistingItem([string]$Path) {
+    return Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+}
+
 function Ensure-Parent([string]$Path) {
     $parent = Split-Path -Parent $Path
     if ([string]::IsNullOrWhiteSpace($parent)) {
@@ -95,7 +134,7 @@ function Ensure-Parent([string]$Path) {
 }
 
 function Resolve-LinkTarget([string]$Path) {
-    $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+    $item = Get-ExistingItem -Path $Path
     if (-not $item) { return $null }
     if (-not ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) { return $null }
     try {
@@ -107,11 +146,22 @@ function Resolve-LinkTarget([string]$Path) {
     return $null
 }
 
+function Write-BackupArchive {
+    if ($DryRun) {
+        Write-Host "[DRY] Create archive: $ArchivePath"
+        return
+    }
+    if (Test-Path -LiteralPath $ArchivePath) {
+        Remove-Item -LiteralPath $ArchivePath -Force
+    }
+    Compress-Archive -Path (Join-Path $BackupDir "*") -DestinationPath $ArchivePath -Force
+}
+
 if (-not (Test-Path -LiteralPath $ManifestPath -PathType Leaf)) {
     throw "Manifest not found: $ManifestPath"
 }
 
-$entries = Parse-Manifest -Path $ManifestPath
+$entries = @((Parse-Manifest -Path $ManifestPath) + (Parse-SkillDeploymentManifest -Path $SkillManifestPath))
 $indexRows = New-Object System.Collections.Generic.List[object]
 $seenTargets = @{}
 
@@ -131,7 +181,7 @@ foreach ($entry in $entries) {
     $targetPath = Join-Path $HomeDir $targetRel
     $backupPath = Join-Path $BackupFilesDir $targetRel
 
-    if (-not (Test-Path -LiteralPath $targetPath)) {
+    if (-not (Get-ExistingItem -Path $targetPath)) {
         $indexRows.Add([PSCustomObject]@{
             Status = "MISSING"
             Target = $targetRel
@@ -177,6 +227,8 @@ if (-not $DryRun) {
     Set-Content -LiteralPath $IndexPath -Value ($lines -join "`n")
 }
 
+Write-BackupArchive
+
 Write-Host ""
 Write-Host "Backup summary:"
 $indexRows | Group-Object Status | Sort-Object Name | ForEach-Object {
@@ -189,4 +241,5 @@ if ($DryRun) {
 } else {
     Write-Host "Backup created at: $BackupDir"
     Write-Host "Index file: $IndexPath"
+    Write-Host "Archive file: $ArchivePath"
 }

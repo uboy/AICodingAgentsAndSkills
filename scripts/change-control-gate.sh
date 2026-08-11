@@ -211,7 +211,6 @@ functional_patterns=(
   "CURSOR.md"
   "GEMINI.md"
   "OPENCODE.md"
-  "opencode.json"
   "templates/git/pre-commit"
 )
 
@@ -228,9 +227,6 @@ done
 
 trivial_config_patterns=(
   ".claude/settings.json"
-  ".gemini/settings.json"
-  "configs/codex/config.toml"
-  "opencode.json"
   ".cursorrules"
   ".cursor/rules/*"
   "README.md"
@@ -335,7 +331,6 @@ if [[ $functional_changed -eq 1 && $is_trivial_config_only -eq 0 ]]; then
     "policy/*.md"
     "policy/*.json"
     "AGENTS*.md"
-    "configs/codex/config.toml"
     "deploy/manifest.txt"
   )
   has_significant_logic_change=0

@@ -197,7 +197,6 @@ $functionalPatterns = @(
     "CURSOR.md",
     "GEMINI.md",
     "OPENCODE.md",
-    "opencode.json",
     "templates/git/pre-commit"
 )
 
@@ -210,9 +209,6 @@ $functionalChanged = @(
 
 $trivialConfigPatterns = @(
     ".claude/settings.json",
-    ".gemini/settings.json",
-    "configs/codex/config.toml",
-    "opencode.json",
     ".cursorrules",
     ".cursor/rules/*",
     "README.md"
@@ -297,7 +293,6 @@ if ($functionalChanged.Count -gt 0 -and (-not $isTrivialConfigOnly)) {
         "policy/*.md",
         "policy/*.json",
         "AGENTS*.md",
-        "configs/codex/config.toml",
         "deploy/manifest.txt"
     )
     $hasSignificantLogicChange = @(

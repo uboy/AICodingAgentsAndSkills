@@ -1,7 +1,6 @@
 import subprocess
 import tempfile
 from pathlib import Path
-import tomllib
 import unittest
 
 
@@ -44,12 +43,7 @@ class GenerationContractTests(unittest.TestCase):
             self.assertIn("Cross-OS support is required by default.", warm_text)
             self.assertIn("Skills governance is mandatory.", cold_text)
 
-    def test_codex_config_source_and_generated_output_are_valid_toml(self):
-        source_data = tomllib.loads((REPO_ROOT / "adapters" / "Codex" / "config.toml").read_text(encoding="utf-8"))
-        self.assertEqual("never", source_data["approval_policy"])
-        self.assertEqual("workspace-write", source_data["sandbox_mode"])
-        self.assertTrue(source_data["command_safety"]["check_command_safety"])
-
+    def test_runtime_configs_are_not_generated_in_supported_outputs(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             out_dir = Path(temp_dir) / "out"
             result = run_pwsh(
@@ -58,9 +52,34 @@ class GenerationContractTests(unittest.TestCase):
                 str(out_dir),
             )
             self.assertEqual(0, result.returncode, msg=result.stderr or result.stdout)
-            generated = tomllib.loads((out_dir / ".codex" / "config.toml").read_text(encoding="utf-8"))
 
-        self.assertEqual(source_data, generated)
+            retired_outputs = [
+                ".claude/settings.json",
+                ".codex/config.toml",
+                ".codex/hooks.json",
+                ".cursor/settings.json",
+                ".cursor/hooks.json",
+                ".gemini/settings.json",
+                ".gemini/extensions/ai-coding-agents/manifest.json",
+                "opencode.json",
+                ".cline/settings.json",
+            ]
+            for rel in retired_outputs:
+                self.assertFalse((out_dir / rel).exists(), rel)
+
+    def test_skill_manifest_generator_matches_checked_in_tsv(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            out_path = Path(temp_dir) / "skill-deployment-manifest.tsv"
+            result = run_pwsh(
+                "scripts/generate-skill-deployment-manifest.ps1",
+                "-OutPath",
+                str(out_path),
+            )
+            self.assertEqual(0, result.returncode, msg=result.stderr or result.stdout)
+
+            expected = (REPO_ROOT / "deploy" / "skill-deployment-manifest.tsv").read_text(encoding="utf-8")
+            generated = out_path.read_text(encoding="utf-8")
+            self.assertEqual(expected, generated)
 
 
 if __name__ == "__main__":

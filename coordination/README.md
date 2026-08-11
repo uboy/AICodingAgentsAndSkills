@@ -14,6 +14,7 @@ This directory provides tracked coordination templates/docs plus local runtime s
 - `state/`: local runtime status and heartbeat.
 - `handoffs/`: local per-task outputs and delivery notes.
 - `reviews/`: local review reports.
+- `briefs/`: local execution briefs refined from raw user requests before delegation.
 - `locks/`: local file-based locks for shared resources.
 - `PLAN-TASK-PROTOCOL.md`: shared plan/handoff protocol.
 - `templates/`: task/plan/handoff templates.
@@ -37,6 +38,7 @@ Local runtime artifacts:
 - `approval-overrides.json`
 - `handoffs/*.md`
 - `reviews/*.md`
+- `briefs/*.json`
 - `state/<agent>.md`
 - `state/session-usage.json`
 - `locks/*.lock`
@@ -54,6 +56,11 @@ Each line is one JSON object:
 
 Allowed `status`: `todo`, `in_progress`, `blocked`, `done`.
 Checklist item status: `todo`, `in_progress`, `blocked`, `done`.
+
+Execution briefs:
+- create from `templates/execution-brief.json`
+- store locally under `briefs/`
+- refresh them at delegation boundaries, after verified chunks, and before resuming long work
 
 ### Interactive Task Generator
 

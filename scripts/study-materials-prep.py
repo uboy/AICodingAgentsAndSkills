@@ -6,6 +6,15 @@ Recursively scans a source directory, extracts content from all supported
 files (archives, PDFs, DOCX, PPTX, TXT, MD, FB2, DJVU, HTML, images),
 and produces structured Markdown output ready for AI agents.
 
+Within this repository, these prepared Markdown outputs are shared upstream
+academic infrastructure for:
+- lecture-transcript
+- homework-management
+- case-analyzer
+
+The launching agent/workflow must verify the resulting pack before trusting it
+and keep originals available as fallback when conversion quality is weak.
+
 Usage:
     python study-materials-prep.py --source <path>
     python study-materials-prep.py --source <path> --output <path>
@@ -18,6 +27,7 @@ Use --install-deps to auto-install missing dependencies.
 """
 
 import argparse
+from collections import defaultdict
 import hashlib
 import json
 import logging
@@ -296,6 +306,150 @@ def classify(path: Path) -> str:
     return "skip"
 
 
+def normalize_for_fingerprint(text: str) -> str:
+    normalized = re.sub(r"\s+", " ", text).strip().lower()
+    normalized = re.sub(r"[^0-9a-zа-яё]+", "", normalized)
+    return normalized
+
+
+def build_group_slug(rel: Path) -> str:
+    parent = rel.parent.as_posix()
+    if parent in {"", "."}:
+        return ""
+    slug = re.sub(r"[^0-9a-zа-яё]+", "-", parent.lower()).strip("-")
+    return slug or "source-pack"
+
+
+def detect_review_flags(content: str, ftype: str, word_count: int) -> list[str]:
+    flags = []
+    lowered = content.lower()
+
+    if "[error" in lowered or "[unsupported" in lowered or "unavailable" in lowered:
+        flags.append("extraction_error")
+    if "[ocr" in lowered or "ocr error" in lowered:
+        flags.append("ocr_involved")
+    if "�" in content:
+        flags.append("replacement_chars")
+    if ftype in {"pdf", "doc", "presentation", "book", "djvu", "html", "image", "archive"} and word_count < 40:
+        flags.append("low_text_yield")
+    if re.search(r"[^\w\s]{10,}", content):
+        flags.append("noise_suspected")
+    return sorted(set(flags))
+
+
+def make_entry(rel: Path, out_path: Path, output_root: Path, ftype: str, content: str, word_count: int,
+               review_flags: list[str], preferred_for_context: bool = True) -> dict:
+    prepared_status = "review_needed" if review_flags else "prepared_trusted"
+    group_slug = build_group_slug(rel)
+    source_rel = rel.as_posix()
+    output_rel = out_path.relative_to(output_root).as_posix()
+    original_rel = (Path("originals") / rel).as_posix()
+    fingerprint = normalize_for_fingerprint(content)
+    return {
+        "file": output_rel,
+        "title": out_path.stem,
+        "source_file": source_rel,
+        "source_kind": ftype,
+        "word_count": word_count,
+        "prepared_status": prepared_status,
+        "review_flags": review_flags,
+        "original_fallback": original_rel,
+        "original_fallback_required": prepared_status == "review_needed",
+        "preferred_for_context": preferred_for_context and prepared_status == "prepared_trusted",
+        "duplicate_of": None,
+        "pack_group": group_slug,
+        "merged_into": None,
+        "_fingerprint": fingerprint,
+    }
+
+
+def build_merged_pack(output: Path, subject: str, group_slug: str, members: list[dict]) -> dict:
+    merged_dir = output / "merged-packs"
+    merged_dir.mkdir(parents=True, exist_ok=True)
+    merged_rel = Path("merged-packs") / f"{group_slug}.md"
+    merged_path = output / merged_rel
+
+    chunks = []
+    review_flags = set()
+    total_words = 0
+    for member in members:
+        member_path = output / member["file"]
+        text = member_path.read_text(encoding="utf-8", errors="replace")
+        second_delim = text.find("---", text.find("---", 3) + 3)
+        body = text[second_delim + 3:].strip() if second_delim > 0 else text.strip()
+        chunks.append(
+            f"## {member['title']}\n\n"
+            f"> Source file: `{member['source_file']}`\n\n"
+            f"{body}\n"
+        )
+        review_flags.update(member["review_flags"])
+        total_words += member["word_count"]
+
+    metadata = {
+        "source_kind": "merged_pack",
+        "prepared_status": "review_needed" if review_flags else "prepared_trusted",
+        "review_flags": sorted(review_flags),
+        "original_fallback": "",
+        "original_fallback_required": bool(review_flags),
+        "pack_group": group_slug,
+        "merged_from": [member["file"] for member in members],
+    }
+    merged_content = "\n---\n".join(chunks)
+    merged_md = build_md(merged_rel, merged_content, subject, merged_path, total_words, metadata)
+    merged_path.write_text(merged_md, encoding="utf-8")
+
+    return {
+        "file": merged_rel.as_posix(),
+        "title": merged_path.stem,
+        "source_file": "",
+        "source_kind": "merged_pack",
+        "word_count": total_words,
+        "prepared_status": metadata["prepared_status"],
+        "review_flags": sorted(review_flags),
+        "original_fallback": "",
+        "original_fallback_required": bool(review_flags),
+        "preferred_for_context": not review_flags,
+        "duplicate_of": None,
+        "pack_group": group_slug,
+        "merged_into": None,
+        "merged_from": [member["file"] for member in members],
+        "_fingerprint": normalize_for_fingerprint(merged_content),
+    }
+
+
+def finalize_entries(output: Path, subject: str, stats: dict) -> None:
+    fingerprint_first = {}
+    grouped = defaultdict(list)
+
+    for entry in sorted(stats["entries"], key=lambda item: item["file"]):
+        fingerprint = entry.get("_fingerprint") or ""
+        if fingerprint and len(fingerprint) >= 80:
+            if fingerprint in fingerprint_first:
+                entry["duplicate_of"] = fingerprint_first[fingerprint]
+                entry["preferred_for_context"] = False
+            else:
+                fingerprint_first[fingerprint] = entry["file"]
+
+        if entry["duplicate_of"] is None and entry["pack_group"] and entry["word_count"] <= 220:
+            grouped[entry["pack_group"]].append(entry)
+
+    merged_entries = []
+    for group_slug, members in grouped.items():
+        if len(members) < 2:
+            continue
+        total_words = sum(member["word_count"] for member in members)
+        if total_words > 1200:
+            continue
+        merged_entry = build_merged_pack(output, subject, group_slug, members)
+        for member in members:
+            member["merged_into"] = merged_entry["file"]
+            member["preferred_for_context"] = False
+        merged_entries.append(merged_entry)
+        stats["output_files"].append(merged_entry["file"])
+
+    stats["entries"].extend(merged_entries)
+
+
 # ---------------------------------------------------------------------------
 # Main processing
 # ---------------------------------------------------------------------------
@@ -305,7 +459,7 @@ def process_dir(source: Path, output: Path, subject: str) -> dict:
         "files_scanned": 0, "archives": 0, "text": 0, "doc": 0,
         "pdf": 0, "pptx": 0, "book": 0, "djvu": 0, "html": 0,
         "image": 0, "skipped": 0, "errors": 0, "output_files": [],
-        "total_words": 0,
+        "total_words": 0, "entries": [],
     }
     img_dir = output / "_ocr_tmp"
     img_dir.mkdir(parents=True, exist_ok=True)
@@ -425,27 +579,34 @@ def process_dir(source: Path, output: Path, subject: str) -> dict:
         # Build output Markdown
         word_count = len(content.split())
         stats["total_words"] += word_count
-
-        md = build_md(rel, content, subject, file_path, word_count)
         out_path = build_out_path(output, rel, file_path)
+        review_flags = detect_review_flags(content, ftype, word_count)
+        entry = make_entry(rel, out_path, output, ftype, content, word_count, review_flags)
+        md = build_md(rel, content, subject, file_path, word_count, entry)
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(md, encoding="utf-8")
         stats["output_files"].append(str(out_path.relative_to(output)))
+        stats["entries"].append(entry)
 
     # Clean up OCR temp
     shutil.rmtree(img_dir, ignore_errors=True)
+    finalize_entries(output, subject, stats)
     return stats
 
 
-def build_md(rel: Path, content: str, subject: str, orig: Path, wc: int) -> str:
+def build_md(rel: Path, content: str, subject: str, orig: Path, wc: int, metadata: dict | None = None) -> str:
+    metadata = metadata or {}
     lines = [
         "---",
         f"title: \"{rel.stem.replace('_', ' ').strip()}\"",
         f"subject: \"{subject}\"",
         f"source_file: \"{rel.as_posix()}\"",
+        f"source_kind: \"{metadata.get('source_kind', 'unknown')}\"",
         f"processed_at: \"{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}\"",
         f"original_hash: \"{hashlib.sha256(content.encode()).hexdigest()[:16]}\"",
         f"word_count: {wc}",
+        f"prepared_status: \"{metadata.get('prepared_status', 'prepared_trusted')}\"",
+        "review_flags:",
         "---",
         "",
         f"# {rel.stem.replace('_', ' ').strip()}",
@@ -457,6 +618,32 @@ def build_md(rel: Path, content: str, subject: str, orig: Path, wc: int) -> str:
         content,
         "",
     ]
+    review_flags = metadata.get("review_flags", [])
+    if review_flags:
+        review_idx = lines.index("review_flags:") + 1
+        for flag in review_flags:
+            lines.insert(review_idx, f"  - \"{flag}\"")
+            review_idx += 1
+    else:
+        review_idx = lines.index("review_flags:") + 1
+        lines.insert(review_idx, "  - \"none\"")
+
+    insert_at = lines.index("---", 1)
+    optional_lines = [
+        f"original_fallback: \"{metadata.get('original_fallback', '')}\"",
+        f"original_fallback_required: {str(metadata.get('original_fallback_required', False)).lower()}",
+    ]
+    if metadata.get("pack_group"):
+        optional_lines.append(f"pack_group: \"{metadata['pack_group']}\"")
+    if metadata.get("duplicate_of"):
+        optional_lines.append(f"duplicate_of: \"{metadata['duplicate_of']}\"")
+    if metadata.get("merged_into"):
+        optional_lines.append(f"merged_into: \"{metadata['merged_into']}\"")
+    if metadata.get("merged_from"):
+        optional_lines.append("merged_from:")
+        optional_lines.extend(f"  - \"{item}\"" for item in metadata["merged_from"])
+    for offset, line in enumerate(optional_lines):
+        lines.insert(insert_at + offset, line)
     return "\n".join(lines)
 
 
@@ -467,35 +654,64 @@ def build_out_path(output: Path, rel: Path, orig: Path) -> Path:
 
 
 def write_index(output: Path, stats: dict, subject: str):
+    entries = sorted(stats["entries"], key=lambda item: item["file"])
+    preferred_context_files = [
+        entry["file"] for entry in entries
+        if entry["preferred_for_context"] and not entry["duplicate_of"]
+    ]
+    review_before_use_files = [
+        entry["file"] for entry in entries
+        if entry["prepared_status"] == "review_needed"
+    ]
+    duplicate_files = [
+        {"file": entry["file"], "duplicate_of": entry["duplicate_of"]}
+        for entry in entries if entry["duplicate_of"]
+    ]
+    merged_packs = [
+        {"file": entry["file"], "merged_from": entry.get("merged_from", [])}
+        for entry in entries if entry["source_kind"] == "merged_pack"
+    ]
+
     index = {
         "subject": subject,
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "files_scanned": stats["files_scanned"],
         "output_files": len(stats["output_files"]),
         "total_words": stats["total_words"],
-        "statistics": {k: v for k, v in stats.items() if k != "output_files"},
+        "statistics": {k: v for k, v in stats.items() if k not in {"output_files", "entries"}},
+        "ingestion_workflow": {
+            "launch_mode": "agent_launched_orchestrated_step",
+            "verification_required": True,
+            "originals_retained": True,
+            "duplicate_strategy": "mark_duplicate_and_reduce_preferred_context",
+            "consolidation_strategy": "safe_group_merge_for_small_related_fragments",
+        },
+        "preferred_context_files": preferred_context_files,
+        "review_before_use_files": review_before_use_files,
+        "duplicate_files": duplicate_files,
+        "merged_packs": merged_packs,
         "entries": [],
     }
-    for md_file in sorted(output.rglob("*.md")):
-        if md_file.name == "README.md":
-            continue
+    for entry in entries:
+        md_file = output / entry["file"]
         text = md_file.read_text(encoding="utf-8", errors="replace")
-        # Extract preview (after front matter)
         idx = text.find("---", text.find("---", 3) + 3)
         preview = ""
         if idx > 0:
             preview = text[idx + 3:].strip()[:300]
-        index["entries"].append({
-            "file": md_file.relative_to(output).as_posix(),
-            "title": md_file.stem,
-            "word_count": len(text.split()),
-            "preview": preview.replace("\n", " "),
-        })
+        clean_entry = {k: v for k, v in entry.items() if not k.startswith("_")}
+        clean_entry["preview"] = preview.replace("\n", " ")
+        index["entries"].append(clean_entry)
     (output / "index.json").write_text(
         json.dumps(index, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def write_readme(output: Path, stats: dict, subject: str, source: Path):
+    trusted = [entry for entry in stats["entries"] if entry["prepared_status"] == "prepared_trusted"]
+    review_needed = [entry for entry in stats["entries"] if entry["prepared_status"] == "review_needed"]
+    duplicates = [entry for entry in stats["entries"] if entry["duplicate_of"]]
+    merged = [entry for entry in stats["entries"] if entry["source_kind"] == "merged_pack"]
+
     lines = [
         f"# {subject} — Study Materials (processed)",
         "",
@@ -516,20 +732,57 @@ def write_readme(output: Path, stats: dict, subject: str, source: Path):
         f"- Images OCR'd: {stats['image']}",
         f"- Output Markdown files: {len(stats['output_files'])}",
         f"- Total words: {stats['total_words']}",
+        f"- Trusted prepared files: {len(trusted)}",
+        f"- Review-needed files: {len(review_needed)}",
+        f"- Duplicate-marked files: {len(duplicates)}",
+        f"- Merged packs: {len(merged)}",
         "",
         "## Output structure",
         "",
         "Each file preserves the original relative directory structure.",
-        "All files have YAML front matter with subject, source, hash, and word count.",
+        "All files have YAML front matter with subject, source, hash, word count, prepared status, review flags, and original fallback path.",
+        "Original source files are preserved under `originals/` for fallback when conversion is weak or suspicious.",
+        "",
+        "## Agent-launched ingestion workflow",
+        "",
+        "Use this prep step as an agent/workflow action:",
+        "1. Inspect the incoming material set and decide whether preparation is recommended.",
+        "2. Run `scripts/study-materials-prep.py`.",
+        "3. Review `index.json`, the generated Markdown, and the review-needed list before trusting the pack.",
+        "4. Prefer trusted prepared files for downstream skills, and keep originals available when conversion is weak.",
+        "5. Use merged packs for overview context when they are present, but fall back to source members or originals for critical claims.",
+        "",
+        "## Verification and fallback",
+        "",
+        "- `prepared_trusted` means the extracted text is suitable as the preferred context shape.",
+        "- `review_needed` means the launching agent/workflow must review the Markdown and may need to consult `originals/` before using it for precise claims.",
+        "- `original_fallback_required: true` means the original file should remain prominent in the academic context packet.",
+        "- `duplicate_of` means the file is indexed but should not usually be preferred for downstream context loading.",
+        "- merged packs under `merged-packs/` reduce fragmentation for related small files.",
         "",
         "## Usage",
         "",
         "- Load `.md` files into Claude / Codex / Gemini as context",
+        "- Use them as prepared source packs for `homework-management` and `case-analyzer`",
+        "- Use extracted lecture text as input to `lecture-transcript` when raw lecture files needed OCR or archive extraction",
         "- Upload to ChatGPT as Knowledge files",
         "- Import into NotebookLM as sources",
         "- Use `index.json` for RAG pipeline ingestion",
         "",
     ]
+    if review_needed:
+        lines.extend(["## Review needed before trusting for precise academic claims", ""])
+        for entry in review_needed[:15]:
+            flags = ", ".join(entry["review_flags"]) or "manual_review"
+            lines.append(
+                f"- `{entry['file']}` -> review flags: {flags}; fallback: `{entry['original_fallback']}`"
+            )
+        lines.append("")
+    if merged:
+        lines.extend(["## Merged packs", ""])
+        for entry in merged[:15]:
+            lines.append(f"- `{entry['file']}` from {', '.join(entry.get('merged_from', []))}")
+        lines.append("")
     if stats["errors"]:
         lines.extend(["## Errors", "", f"- {stats['errors']} file(s) had extraction errors", ""])
     (output / "README.md").write_text("\n".join(lines), encoding="utf-8")

@@ -166,10 +166,7 @@ if ($shTargets.Count -gt 0 -and -not $bash) {
     }
 }
 
-$jsonFiles = @(
-    "out/opencode.json",
-    "out/.gemini/settings.json"
-)
+$jsonFiles = @()
 foreach ($rel in $jsonFiles) {
     $path = Join-Path $RepoRoot $rel
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
@@ -183,10 +180,7 @@ foreach ($rel in $jsonFiles) {
     }
 }
 
-$tomlFiles = @(
-    "adapters/Codex/config.toml",
-    "out/.codex/config.toml"
-)
+$tomlFiles = @()
 foreach ($rel in $tomlFiles) {
     $path = Join-Path $RepoRoot $rel
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {

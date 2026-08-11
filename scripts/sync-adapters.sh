@@ -217,9 +217,6 @@ This file remains intentionally thin to prevent policy drift."
 claude_body="$(replace_placeholder "$claude_body" "{{EXTRA_FOOTER}}" "$claude_extra")"
 write_or_check "$OUT_DIR/CLAUDE.md" "$(echo "$claude_body" | sed '/^$/N;/^\n$/d')" "CLAUDE.md"
 
-# Claude settings + hooks
-[[ -f "$ADAPTERS_DIR/Claude/settings.json" ]] && \
-  write_or_check "$OUT_DIR/.claude/settings.json" "$(cat "$ADAPTERS_DIR/Claude/settings.json")" ".claude/settings.json"
 copy_dir_contents "$ADAPTERS_DIR/Claude/hooks" "$OUT_DIR/.claude/hooks" "Claude/hooks"
 copy_dir_contents "$AGENTS_DIR" "$OUT_DIR/.claude/agents" "Claude/agents"
 [[ -d "$AGENTS_DIR/weak-model" ]] && copy_dir_contents "$AGENTS_DIR/weak-model" "$OUT_DIR/.claude/agents/weak-model" "Claude/agents/weak-model"
@@ -254,10 +251,6 @@ Cold lookups commonly matter for:
 codex_content="$(printf '%s\n\n%s\n\n%s' "$codex_header" "${TIER_CONTENT[hot]}" "$codex_footer")"
 write_or_check "$OUT_DIR/.codex/AGENTS.md" "$codex_content" ".codex/AGENTS.md"
 
-[[ -f "$ADAPTERS_DIR/Codex/config.toml" ]] && \
-  write_or_check "$OUT_DIR/.codex/config.toml" "$(cat "$ADAPTERS_DIR/Codex/config.toml")" ".codex/config.toml"
-[[ -f "$ADAPTERS_DIR/Codex/hooks.json" ]] && \
-  write_or_check "$OUT_DIR/.codex/hooks.json" "$(cat "$ADAPTERS_DIR/Codex/hooks.json")" ".codex/hooks.json"
 if [[ ! -d "$AGENTS_DIR" || -z "$(find "$AGENTS_DIR" -maxdepth 1 -type f 2>/dev/null)" ]]; then
   if [[ $AGENT_SOURCE_WARNED -eq 0 ]]; then
     echo "WARN: shared agent generation is disabled in this checkout: '$AGENTS_DIR' has no canonical tracked source files." >&2
@@ -321,20 +314,14 @@ Read and follow canonical project policy:
 - \`policy/team-lead-orchestrator.md\`"
 write_or_check "$OUT_DIR/.gemini/AGENTS.md" "$gemini_agents" ".gemini/AGENTS.md"
 
-[[ -f "$ADAPTERS_DIR/Gemini/settings.json" ]] && \
-  write_or_check "$OUT_DIR/.gemini/settings.json" "$(cat "$ADAPTERS_DIR/Gemini/settings.json")" ".gemini/settings.json"
-[[ -f "$ADAPTERS_DIR/Gemini/hooks.json" ]] && \
-  write_or_check "$OUT_DIR/.gemini/hooks.json" "$(cat "$ADAPTERS_DIR/Gemini/hooks.json")" ".gemini/hooks.json"
 copy_dir_contents "$ADAPTERS_DIR/Gemini/hooks" "$OUT_DIR/.gemini/hooks" "Gemini/hooks"
-[[ -f "$ADAPTERS_DIR/Gemini/extension-manifest.json" ]] && \
-  write_or_check "$OUT_DIR/.gemini/extensions/ai-coding-agents/manifest.json" "$(cat "$ADAPTERS_DIR/Gemini/extension-manifest.json")" ".gemini/extensions/manifest.json"
 copy_dir_contents "$AGENTS_DIR" "$OUT_DIR/.gemini/extensions/ai-coding-agents/agents" "Gemini/agents"
 
 # --- OpenCode ---
 echo ""
 echo "[OpenCode]"
 opencode_body="$(echo "$TEMPLATE" | sed 's/{{SYSTEM_LABEL}}/OpenCode/')"
-opencode_extra="OpenCode configuration is in \`opencode.json\` at the project root."
+opencode_extra="OpenCode reads the generated policy adapters and installed skills from the supported deploy surface."
 opencode_body="$(replace_placeholder "$opencode_body" "{{EXTRA_FOOTER}}" "$opencode_extra")"
 write_or_check "$OUT_DIR/OPENCODE.md" "$(echo "$opencode_body" | sed '/^$/N;/^\n$/d')" "OPENCODE.md"
 
@@ -345,8 +332,6 @@ Read and follow canonical project policy:
 - \`policy/team-lead-orchestrator.md\`"
 write_or_check "$OUT_DIR/.opencode/AGENTS.md" "$opencode_agents" ".opencode/AGENTS.md"
 
-[[ -f "$ADAPTERS_DIR/OpenCode/config.json" ]] && \
-  write_or_check "$OUT_DIR/opencode.json" "$(cat "$ADAPTERS_DIR/OpenCode/config.json")" "opencode.json"
 copy_dir_contents "$AGENTS_DIR" "$OUT_DIR/.opencode/agents" "OpenCode/agents"
 [[ -d "$AGENTS_DIR/weak-model" ]] && copy_dir_contents "$AGENTS_DIR/weak-model" "$OUT_DIR/.opencode/agents/weak-model" "OpenCode/agents/weak-model"
 

@@ -2,6 +2,9 @@
 
 Mandatory baseline for any skill that produces academic homework content.
 
+Shared source-handling contract:
+- `ACADEMIC_SOURCE_PACK.md`
+
 ## Source Grounding
 
 1. All claims MUST be traceable to provided sources.
@@ -41,37 +44,13 @@ Mandatory baseline for any skill that produces academic homework content.
 3. Tone: professional academic Russian
 4. Style: clear, structured, suitable for university submission
 
-## Source Types
+## Source Handling
 
-1. **Lecture transcripts** (ASR or manual) — primary source with timestamps
-2. **Lecture summaries/notes** — condensed version of lectures
-3. **Presentations** (PDF, PPTX) — slide content with slide numbers
-4. **Documents** (DOCX, DOC, TXT) — supporting materials
-5. **Books** (PDF, DJVU, FB2) — additional literature, cite as supplementary
-6. **Videos** (MP4) — mark as `требует просмотра` if not transcribed
-
-## Source Directory Structure
-
-Sources are stored in a read-only directory with structure:
-```
-Занятия/
-├── модуль1/
-│   └── <Предмет>/
-│       ├── Лекция1/
-│       ├── ДЗ/
-│       └── *.pdf, *.docx, etc.
-├── модуль2/
-│   └── ...
-├── модуль3/
-│   └── ...
-└── маголего/
-```
-
-Archives (ZIP, RAR) contain:
-- `Транскрипция*.txt` — full transcript with timestamps
-- `Пересказ*.txt` — structured summary
-- `*.pdf` — slides
-- `*.docx` — notes
+Use `ACADEMIC_SOURCE_PACK.md` as the canonical contract for:
+- prepared Markdown source packs,
+- acceptable raw source forms,
+- when source preparation is recommended,
+- and what academic skills may or may not assume about extracted materials.
 
 ## Integrity Rules
 
@@ -94,4 +73,4 @@ Archives (ZIP, RAR) contain:
 
 - Use `lecture-transcript` to process raw transcripts before homework generation.
 - Use `text-humanize` as optional post-processor for natural language output.
-- Use `homework-indexer` agent to locate and extract relevant sources.
+- `homework-manager` may call the `homework-indexer` agent when source discovery or packet assembly is needed before `homework-management`.

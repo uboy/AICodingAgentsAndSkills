@@ -209,7 +209,7 @@ functional_patterns=(
   "scripts/*" "policy/*" "configs/*" "deploy/*"
   ".claude/*" ".codex/*" ".gemini/*" ".cursor/*" ".opencode/*"
   ".cursorrules" "AGENTS.md" "AGENTS-hot.md" "AGENTS-warm.md" "AGENTS-cold.md" "AGENTS-hot-warm.md"
-  "CLAUDE.md" "CURSOR.md" "GEMINI.md" "OPENCODE.md" "opencode.json" "templates/git/pre-commit"
+  "CLAUDE.md" "CURSOR.md" "GEMINI.md" "OPENCODE.md" "templates/git/pre-commit"
   "skills/*" "commands/*" "evals/*"
 )
 non_functional_patterns=(

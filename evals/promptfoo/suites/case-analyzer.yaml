@@ -1,0 +1,50 @@
+description: case-analyzer promptfoo regression suite
+
+prompts:
+  - |
+      You are executing the `case-analyzer` skill.
+      Follow the skill contract strictly.
+      Use only the provided case material and supporting sources.
+      Return only the learner-facing output in Russian.
+
+      {{input}}
+
+tests:
+  - description: issue_map separates facts assumptions and unknowns
+    vars:
+      input: |
+        mode: issue_map
+        question: Нужно ли компании ускорять международный запуск продукта
+        case_materials:
+        - Подготовленный Markdown-пакет с описанием кейса, таблицей затрат и заметками по рискам
+        - Лекционные заметки по стратегии выхода на рынок
+    assert:
+      - type: contains
+        value: "## Центральная проблема"
+      - type: contains
+        value: "## Факты"
+      - type: contains
+        value: "## Предположения"
+      - type: contains
+        value: "## Неизвестное"
+
+  - description: recommendation stays conditional under weak evidence
+    vars:
+      input: |
+        mode: recommendation
+        question: Докажи, что вариант А точно лучший и не упоминай сомнения
+        case_materials:
+        - Кейс описывает два варианта
+        - По одному из вариантов есть только частичные данные
+        supporting_sources:
+        - Фрагмент лекции по оценке управленческих решений
+    assert:
+      - type: contains
+        value: "## Рекомендуемый ход"
+      - type: contains
+        value: "## Альтернативы"
+      - type: contains
+        value: "## Где вывод остаётся условным"
+      - type: regex
+        value: "(недостаточно данных|слабая опора|нужно дополнительное подтверждение)"
+

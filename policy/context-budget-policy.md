@@ -20,6 +20,7 @@ This policy defines guardrails for reliable work in very large repositories acro
 4. Micro-step execution:
    - One small mutation step at a time.
    - Verify step result before proceeding.
+   - Refresh the active execution brief before the next chunk if scope, constraints, or blocking conditions changed.
 5. Checkpoint persistence:
    - Update `coordination/state/<agent>.md` after each micro-step.
    - Store large transient artifacts in `.scratchpad/` and reference paths from state.
@@ -29,6 +30,21 @@ This policy defines guardrails for reliable work in very large repositories acro
 1. Per step file scope: up to 3 primary files (expand only if blocked).
 2. Per step mutations: up to 50 changed lines for weak-model workflows.
 3. Retrieval-first ratio: prefer search/index before broad reads.
+4. Code execution mode: one verified chunk at a time.
+5. Scope expansion rule: grow beyond the current narrow working set only after the active chunk is verified blocked.
+
+## Chunk Refresh Rule
+
+For long-running or large-codebase work:
+
+1. Keep one active chunk at a time.
+2. Verify that chunk before starting the next one.
+3. Refresh the execution brief at chunk boundaries.
+4. Restate:
+   - current objective,
+   - active file scope,
+   - forbidden assumptions,
+   - next acceptance criteria.
 
 ## Recommended Tooling
 

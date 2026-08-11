@@ -5,10 +5,7 @@
 # Empty lines are ignored.
 #
 # All generated files come from out/ (built by extract-agents-tier + sync-adapters).
-# All source files (adapters/, policy/, skills/) stay in the repo.
-# The shared `agents/` source layer is unresolved in this checkout, so agent
-# deployment entries are intentionally disabled until canonical tracked source
-# files are restored.
+# All source files (adapters/, policy/, skills/, agents/) stay in the repo.
 
 # @category policy
 out/AGENTS-hot.md|AGENTS-hot.md
@@ -27,20 +24,6 @@ out/.codex/AGENTS.md|.codex/AGENTS.md
 out/.opencode/AGENTS.md|.opencode/AGENTS.md
 out/.gemini/AGENTS.md|.gemini/AGENTS.md
 out/.gemini/GEMINI.md|.gemini/GEMINI.md
-out/opencode.json|opencode.json
-
-# @category system-configs (generated from adapters/ via sync-adapters)
-out/.claude/settings.json|.claude/settings.json
-out/.codex/config.toml|.codex/config.toml
-out/.codex/hooks.json|.codex/hooks.json
-out/.gemini/settings.json|.gemini/settings.json
-out/.gemini/hooks.json|.gemini/hooks.json
-.cline/settings.json|.cline/settings.json
-out/.gemini/extensions/ai-coding-agents/manifest.json|.gemini/extensions/ai-coding-agents/manifest.json
-
-# @category system-hooks (generated from adapters/ via sync-adapters)
-out/.claude/hooks|.claude/hooks
-out/.gemini/hooks|.gemini/hooks
 
 # @category cursor-rules (generated from adapters/ via sync-adapters)
 out/.cursor/rules/00-global-policy.mdc|.cursor/rules/00-global-policy.mdc
@@ -48,23 +31,17 @@ out/.cursor/rules/01-agents-policy.mdc|.cursor/rules/01-agents-policy.mdc
 out/.cursor/rules/02-agents-warm.mdc|.cursor/rules/02-agents-warm.mdc
 out/.cursor/rules/03-agents-cold.mdc|.cursor/rules/03-agents-cold.mdc
 
-# @category cline (generated from adapters/Cline/)
-# Cline settings are generated from .cline/settings.json in project root
-
-# @category agents
-# Disabled in this checkout: canonical tracked shared agent source is missing.
-# Do not deploy generated `.claude/agents`, `.codex/agents`, `.gemini/.../agents`,
-# or `.opencode/agents` until the authoritative tracked source layer is restored.
+# @category agents (generated from tracked agents/ via sync-adapters)
+out/.claude/agents|.claude/agents
+out/.codex/agents|.codex/agents
+out/.gemini/extensions/ai-coding-agents/agents|.gemini/extensions/ai-coding-agents/agents
+out/.opencode/agents|.opencode/agents
 
 # @category qwen (generated from adapters/Qwen/ via sync-adapters)
 out/.qwen/AGENTS.md|.qwen/AGENTS.md
 # Qwen domain extension is already covered above
 
-# @category cline (generated from adapters/Cline/)
-# Cline settings are generated from .cline/settings.json in project root
-
 # @category policy-source (tracked in repo, deployed as-is)
 policy|policy
 configs/subscription-limits.json|configs/subscription-limits.json
-# Owner decision pending for blocked layers.
-# See docs/BLOCKED-LAYERS-DECISION.md before treating disabled shared-agent deploy paths as active again.
+# Promptfoo / skill-manifest generation remains the only blocked owner-decision layer.
