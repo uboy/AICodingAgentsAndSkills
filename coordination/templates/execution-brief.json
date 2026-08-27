@@ -1,0 +1,65 @@
+{
+  "_comment": "Tracked template for the execution brief required by policy/execution-brief-contract.md. Copy to coordination/briefs/<task-id>.json and fill in. Replace every placeholder: a brief that only restates the raw request does not satisfy the contract. Field order matches the required-field list in the contract and in coordination/PLAN-TASK-PROTOCOL.md.",
+  "task_id": "T-YYYYMMDD-example",
+  "task_profile": "repo_change",
+  "_task_profile_allowed": ["repo_change", "repo_read", "content_task", "general"],
+  "task_shape": "non_trivial",
+  "_task_shape_allowed": ["trivial", "non_trivial"],
+  "refined_objective": "What actually has to be true when this is done, stated better than the raw request stated it.",
+  "user_intent": "Why the user is asking, including the goal behind the literal wording.",
+  "output_expectation": "The shape of the deliverable: patch, file, report, answer, command output.",
+  "hard_constraints": [
+    "Limits that cannot be traded away: OS, tools, permissions, deadlines, files that must not be touched."
+  ],
+  "forbidden_assumptions": [
+    "Things the executor must not assume without checking, and shortcuts that are not allowed here."
+  ],
+  "relevant_sources": [
+    "Paths, URLs or documents that are in scope. An empty list means the executor must ask, not guess."
+  ],
+  "source_prep_recommendation": {
+    "run_study_materials_prep": false,
+    "_comment": "Set true when scripts/study-materials-prep.py should prepare the sources first.",
+    "prefer": "raw_curated_excerpts",
+    "_prefer_allowed": ["prepared_packs", "raw_curated_excerpts", "originals"],
+    "fallback_to_originals": true,
+    "best_fit_academic_skill": null
+  },
+  "active_rules": [
+    "Rules that must stay in force for the whole task, restated at every refresh."
+  ],
+  "subtask_boundary": "The smallest downstream component that can do this job, and where its scope stops.",
+  "success_criteria": [
+    "Observable conditions that decide done. Not 'works', but what is seen and where."
+  ],
+  "verification_requirements": [
+    "The exact commands or checks that prove each success criterion, defined before delegation."
+  ],
+  "chunking_requirement": {
+    "mode": "small_isolated_verified_chunks",
+    "_mode_allowed": ["single_pass", "small_isolated_verified_chunks"],
+    "max_primary_files": 3,
+    "verify_before_next_chunk": true,
+    "expand_scope_only_when_blocked": true
+  },
+  "long_task_refresh": {
+    "required": true,
+    "refresh_on": [
+      "before handing work to another agent or skill",
+      "after each verified code chunk",
+      "after a blocker, stall, or failed verification",
+      "after scope expansion",
+      "before resuming a paused or interrupted task"
+    ],
+    "restate": [
+      "refined objective",
+      "active rules and constraints",
+      "source limits",
+      "current subtask boundary",
+      "next acceptance criteria"
+    ],
+    "last_refreshed_at": null
+  },
+  "owner": "team-lead-orchestrator",
+  "updated_at": "2026-01-01T00:00:00Z"
+}

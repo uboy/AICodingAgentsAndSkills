@@ -53,8 +53,15 @@ opencode.json
 .scratchpad/
 .agent-memory/
 
-# Coordination runtime artifacts (local only)
-coordination/
+# Coordination runtime artifacts (local only).
+# Use coordination/* rather than coordination/: git does not descend into an ignored
+# directory, so a bare coordination/ makes every negation below unreachable and silently
+# swallows new tracked files under coordination/templates/.
+coordination/*
+!coordination/README.md
+!coordination/PLAN-TASK-PROTOCOL.md
+!coordination/tool-usage.sample.jsonl
+!coordination/templates/
 coordination/code_map/
 coordination/handoffs/
 coordination/locks/
