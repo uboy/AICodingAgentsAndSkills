@@ -1,0 +1,8 @@
+# Shell scripts must keep LF: with CRLF, bash reads "set -euo pipefail" and dies
+# with "invalid option name" on a Windows checkout where core.autocrlf=true.
+*.sh text eol=lf
+
+# Windows-native scripts keep CRLF.
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf

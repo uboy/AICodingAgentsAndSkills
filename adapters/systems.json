@@ -49,6 +49,15 @@
       "label": "Cursor",
       "system_files": [
         {
+          "template": "system-adapter.md",
+          "output": "CURSOR.md",
+          "format": "markdown",
+          "extra_footer": [
+            "Cursor rules are in `.cursor/rules/` (MDC format with YAML frontmatter).",
+            "The `00-global-policy.mdc` file provides base policy; tier-based MDC files are generated from AGENTS.md."
+          ]
+        },
+        {
           "template": "cursor-global-policy",
           "output": ".cursor/rules/00-global-policy.mdc",
           "source": "adapters/Cursor/global-policy.mdc"
@@ -96,8 +105,7 @@
           ],
           "skip_bootstrap": true
         }
-      ],
-      }
+      ]
     },
 
     "Gemini": {
@@ -212,3 +220,4 @@
       ]
     }
   }
+}

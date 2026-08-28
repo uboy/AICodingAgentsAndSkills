@@ -177,7 +177,7 @@ function Copy-DirContents {
 
 Write-Host "`n--- Tier Files ---"
 
-foreach ($tf in $Config.tier_files.files) {
+foreach ($tf in $Config.systems.tier_files.files) {
     $tiers = @()
     if ($tf.tier) { $tiers = @($tf.tier) }
     elseif ($tf.tiers) { $tiers = @($tf.tiers) }
@@ -334,7 +334,7 @@ foreach ($sysName in $Config.systems.PSObject.Properties.Name) {
     }
 
     # --- Agents ---
-    if ($sys.agents -and $Config.shared_agents) {
+    if ($sys.agents -and $Config.systems.shared_agents) {
         if (-not $agentFilesPresent -and -not $agentSourceWarned) {
             Write-Warning "Shared agent generation is disabled in this checkout: '$AgentsDir' has no canonical tracked source files."
             $agentSourceWarned = $true

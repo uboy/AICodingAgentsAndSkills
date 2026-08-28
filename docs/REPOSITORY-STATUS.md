@@ -91,3 +91,35 @@ If a contributor needs to know whether a layer is active:
 - read `configs/repository-status.json` for machine-readable status
 - read `docs/BLOCKED-LAYERS-DECISION.md` for blocked-layer owner decisions
 - treat `AGENTS.md`, `adapters/systems.json`, `adapters/*`, `skills/*`, `agents/*`, and `deploy/skill-deployment-map.json` as the current tracked sources unless a file explicitly says otherwise
+
+## Adapter Pipeline Repair, 2026-08-28
+
+Three defects were making the adapter pipeline generate a partial `out/` and the pre-commit
+integrity gate fail on every commit. All three came in with the April history-rewrite
+recovery, not with a deliberate change.
+
+1. **`adapters/systems.json` was not valid JSON.** The `Cursor` block ended with a stray `}`
+   left over from the deleted `settings`/`hooks` entries, and the file was missing its final
+   closing brace. Everything after the `Cursor` block — Gemini, OpenCode, Qwen, Cline,
+   `shared_agents`, `tier_files` — was unreachable, so those adapters were never generated.
+   Both braces are fixed; the file parses again.
+2. **`scripts/sync-adapters.ps1` read two config keys one level too high.** It used
+   `$Config.shared_agents` and `$Config.tier_files`, but both live under `$Config.systems`.
+   The agents copy step was therefore skipped for every system. Both paths are corrected.
+3. **`CURSOR.md` had no entry in `systems.json`.** `scripts/sync-adapters.sh` writes it from
+   a hardcoded block, the data-driven PowerShell generator did not, and `validate-parity`
+   requires it — so the gate failed on Windows only. The output is now declared in the
+   `Cursor` block, and both generators produce it.
+
+Also added: **`.gitattributes` pinning `*.sh` to LF.** With `core.autocrlf=true` on a Windows
+checkout every shell script arrived with CRLF, and bash refused them with
+`set: pipefail\r: invalid option name`. Windows-native `*.ps1`, `*.cmd` and `*.bat` stay CRLF.
+
+Result: `bash scripts/run-integrity-fast.sh` reports `PASS=1 WARN=0 FAIL=0` and generates 99
+files, against 51 files and `FAIL=7` before the repair.
+
+**Still failing, not repaired:**
+`tests/test_validate_coordination_contract.py::test_bash_rejects_false_commit_pending_claim_if_bash_is_usable`
+fails on a Windows checkout. The test hands a Windows temp path to
+`scripts/validate-coordination.sh`; the script then reports `No local handoffs found` for a
+directory that does exist. It reproduces on a clean clone and is unrelated to the fixes above.
